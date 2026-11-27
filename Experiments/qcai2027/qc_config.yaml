@@ -1,0 +1,231 @@
+# Configuration of the QCAI 2027 proxy experiment (plan: JPN_QCAI_conference_plan.md).
+# Relative paths are relative to the project root (the folder that contains the plan).
+
+paths:
+  dataset_root: Dataset/Moon                         # raw products, same structure as the full-project dataset (QA2)
+  inventory: ../Repository/Dataset/Moon/preprocessing/sources/data_inventory.csv
+  valid_coverage: ../Repository/Dataset/Moon/preprocessing/sources/data_valid_coverage.csv   # QA2.1
+  quality_metrics: ../Repository/Dataset/Moon/preprocessing/sources/data_quality_metrics.csv   # QD-A4: quality score, effective resolution
+  source_root: ../Repository/Dataset/Moon          # full-project raw dataset, origin of the copies (QA2.2)
+  catalog: Dataset/Moon/catalogs/robbins2019/lunar_crater_database_robbins_2018.csv   # QA3.1
+  dataset_scripts: ../Repository/Dataset/scripts     # data_quality, diag_dem_sources, ... (imported, not copied)
+  output: Dataset/Moon/qcai2027                      # rasters and caches of the experiment (QC7.3)
+  results: Experiments/qcai2027/results              # CSV / JSON / figures
+
+# QB1.1 / QD1 (taken 2026-11-18): region R, planetocentric degrees, longitudes east 0-360.
+region:
+  lat_min: -30.0
+  lat_max: 30.0
+  lon_min: 0.0
+  lon_max: 90.0
+
+# QA2: products of the inventory (product_id) that cover R, per modality.
+products:
+  wac: [WAC_GLOBAL_E300N0450_100M, WAC_GLOBAL_E300S0450_100M]
+  dem: [SLDEM2015_512_00N_30N_000_045_FLOAT, SLDEM2015_512_00N_30N_045_090_FLOAT,
+        SLDEM2015_512_30S_00S_000_045_FLOAT, SLDEM2015_512_30S_00S_045_090_FLOAT]
+
+# QC7.1: tiles of the WAC grid of R (also the crater margin of QB2.1)
+tiling:
+  tile_px: 256
+  stride_px: 176      # QC7.1: overlap 80 px; 11 cells (QC7.2)
+  cell_px: 16          # QB2.2: sub-tile = one backbone token (1.6 km)
+
+# QB2.2 / QD5: diameter range (km) of the target craters, [min, max)
+labels:
+  diam_range_km: [1.0, 8.0]
+  bands_km: [1.0, 2.0, 4.0, 8.0]   # QB2.3: diameter bands of the results (edges)
+
+# QA3.1: MD5 of the catalogue table as published in the bundle (bundle_checksums.txt of the PDS4 bundle)
+catalog_md5: 13f2f9df2e71d7049e966ee405c7f014
+
+# QB3.1: geographic split of R into blocks; blocks stratified by crater density tercile
+split:
+  block_deg: 5.0
+  n_strata: 3                  # density terciles (no mare/highland map, QA3.2)
+  fractions: {qk_pool: 0.2, test: 0.2}   # of the blocks of each stratum (floor); the rest is S1
+  val_fraction_of_s1: 0.2      # S1 blocks used as validation (early stopping, stage-1 threshold)
+
+# phase QC: rasters of R in a dedicated stage of the cleaned dataset
+# (Dataset/Moon/preprocessing/clean_dataset/<stage>/, decided 2026-11-18), paths relative to the stage
+preprocess:
+  stage: qcai2027_R
+  layers:
+    wac: LROC/WAC_GLOBAL_100M/wac.npy        # QC1.1
+    dem: LOLA/SLDEM2015_512/dem_height_m.npy   # QC2.1: on the WAC grid of R
+    relief: LOLA/SLDEM2015_512/dem_relief_m.npy   # QC4.1: local relief, float16
+    slope: LOLA/SLDEM2015_512/dem_slope_deg.npy   # QC4.2: slope in degrees, float16
+    hillshade: LOLA/SLDEM2015_512/dem_hillshade.npy   # QC4.3: hillshade lit from the north, float16
+
+# QC3.1: validity mask (valid WAC AND valid DEM); a tile is used only if at least this fraction
+# of its pixels is valid (the invalid ones are filled with the tile median and flagged)
+masks:
+  min_tile_valid_fraction: 0.95
+
+# QC4 (QD3 taken: DEM as [relief, slope, hillshade]): DEM derivatives on the WAC grid of R
+derivatives:
+  relief_sigma_px: 32     # QC4.1: Gaussian sigma (isotropic in pixels, 3.2 km N-S); mode "reflect" at the border of R
+  truncate: 4.0           # kernel radius = truncate * sigma = 128 px
+  hillshade_azimuth_deg: 0.0    # QC4.3: Sun from the north, orthogonal to the WAC Sun (from the west, D14)
+  hillshade_altitude_deg: 30.0
+  wac_sun_azimuth_deg: 270.0   # QD-A5 only: hillshade lit like the WAC (Sun from the west, D14), not an input layer
+
+# QC5.1: robust min-max per layer (percentiles on the S1-train tiles), then the mean / std of the
+# pre-trained DINOv2 config per channel; the 3 layers of each backbone input, in channel order
+normalisation:
+  percentiles: [1, 99]
+  sample_step: 4          # every 4th row and column of the S1-train tiles
+  backbone_inputs:
+    wac: [wac, wac, wac]                  # QC4: WAC reflectance repeated on 3 channels
+    dem: [relief, slope, hillshade]       # QC4 / QD3
+    early: [wac, relief, slope]           # QE2.2: early fusion F-E
+
+# QE1.1 (QD2): frozen DINOv2 ViT-S/14 (model name: qc_checks.DINO_MODEL), one instance per modality
+backbone:
+  img_size: 224           # tile of 256 px resized in memory (nothing written) -> 16 x 16 patch tokens of 14 px
+  resize: bilinear        # with antialias; applied to the layers in [0, 1], before the QC5.1 normalisation
+
+# QF2 (QD4 taken 2026-11-19): cross-attention fusion F-X
+fusion:
+  in_dim: 384          # DINOv2 ViT-S/14 tokens (QE1.1)
+  d_model: 256         # QF2.1: projection of each modality
+  heads: 4             # QF2.2
+  blocks: 2            # QF2.2 (QF5 fallback: 1 block, 128)
+  ffn_ratio: 4         # standard transformer FFN (256 -> 1024 -> 256)
+  out_dim: 512         # QF2.3: fused map 16 x 16 x 512
+  mask_ratio: [0.4, 0.75]   # QF3.1: per tile and modality, masked fraction drawn uniformly in this range
+  modality_dropout: 0.2     # QF3.2: probability that a tile has one whole modality masked (the other fully visible)
+  decoder: {d_model: 256, heads: 4, ffn_ratio: 4}   # QF3.3: one transformer layer + two linear heads (discarded after training)
+  cm_hidden: 512       # F-CM: per-token MLP [WAC, DEM] 768 -> 512 -> GELU -> 512 (control of F-X, QF1)
+  train:               # QF3.4, same recipe for F-X and F-CM
+    lrs: [6.0e-4, 1.0e-3]     # trained with the first seed; per model the lr with the lowest S1-val loss is kept (QF3.5 adopted; first recipe r1: 1e-4, 3e-4)
+    seeds: [2027, 2028, 2029] # first seed: lr selection and model used downstream; the others at the chosen lr (spread, QF4.1)
+    batch: 128                # tiles
+    epochs: 100               # maximum (r1: 50)
+    warmup_epochs: 5          # linear warm-up, then cosine decay to 0 at the last epoch (r1: 2)
+    weight_decay: 0.05        # AdamW, not on biases, norms, mask and modality tokens
+    betas: [0.9, 0.95]        # AdamW (MAE)
+    patience: 10              # early stopping on the S1-val reconstruction loss (epochs without improvement)
+  train_sweep:         # QF3.5 [opt], exploratory: overrides of the first recipe r1 of ``train``; met the switch rule, now equal to ``train``
+    lrs: [6.0e-4, 1.0e-3]
+    seeds: [2027]
+    epochs: 100
+    warmup_epochs: 5
+    switch_min_gain: 0.02     # rule fixed before the run: adopt it only if the best F-X S1-val loss is >= 2 % below QF3.4 (same seed) and stable
+
+probes:                # phase QG, fitted on S1-train, hyper-parameter on the S1-val AP, test evaluated once
+  bootstrap: 1000             # resamples of the test blocks (95 % CI)
+  linear:                     # QG1, class-balanced L2 logistic regression
+    Cs: [1.0e-3, 1.0e-2, 1.0e-1, 1.0]
+  pca:                        # QG3, the linear probe of QG1 (same Cs) on the first d principal components
+    dims: [4, 8, 12, 16, 20]  # the d grid of the quantum stage (QI); d = 16 is the Table I value
+    table_dim: 16
+    input: centred            # PCA of the centred features (covariance), fitted on S1-train; components standardised (also for QI1.1)
+  mlp:                        # QG2, d -> hidden -> 1, ReLU, class-balanced BCE, AdamW
+    hidden: 256
+    lr: 1.0e-3
+    batch: 4096               # sub-tiles
+    epochs: 30                # maximum
+    patience: 5               # early stopping on the S1-val AP, best epoch kept
+    weight_decays: [1.0e-4, 1.0e-3, 1.0e-2, 1.0e-1]   # tried with the first seed, best S1-val AP kept
+    seeds: [2027, 2028, 2029]                         # first: weight-decay selection; all: test AP mean +- std
+
+stage1:                # QH1, one head per variant: Conv 3x3 (D -> hidden) -> ReLU -> Conv 3x3 (hidden -> 1)
+  hidden: 128
+  lr: 1.0e-3                  # AdamW
+  weight_decay: 1.0e-2
+  batch: 64                   # tiles
+  epochs: 50                  # maximum
+  patience: 8                 # early stopping on the S1-val AP of the owned sub-tiles, best epoch kept
+  seed: 2027
+  recall: 0.95                # QH2: threshold of each head on S1-val for this recall of the owned positive sub-tiles
+  curve_recalls: [0.80, 0.85, 0.90, 0.95]   # QH2: candidate fraction / precision reported at these recalls too
+  trigger_min_diam_km: 3.0    # QH2 trigger of QB2.5: circle of the target craters with D >= this (and < 8 km)
+
+qk_samples:            # QH4, training samples of the kernel SVMs, drawn from the labelled QK-pool candidates of each variant
+  sizes: [100, 250, 500, 1000, 2000]
+  seeds: [2027, 2028, 2029, 2030, 2031]
+  positive_fraction: 0.5      # balanced classes (decided with the user)
+  min_band_share: 0.10        # positives: proportional to the candidates per band, at least this share per band
+                              # strata: positives per band x density tercile, negatives per tercile (proportional);
+                              # nested: for one seed every size is a prefix of a fixed random order in each stratum
+
+test_subset:           # QH5, fixed test candidates of each variant, the same for every method of stage 2
+  size: 2000
+  seed: 2027                  # natural class ratio, proportional over class x band x density tercile
+
+quantum:               # phase QI, stage 2 on the QK samples (QH4) and the test candidates (QH5)
+  dims: [4, 8, 12, 16, 20]    # QI1.1: PCA components = qubits (one feature per qubit); PCA of the centred features
+                              # (QD6), fitted on each QK training sample, components standardised on that sample
+  bandwidths: [0.05, 0.1, 0.2, 0.5, 1.0]   # QI1.2: angle = c * x_i (QK-A: R_Y(c x_i); QK-Z: R_Z(2 c x_i), R_ZZ(2 c^2 x_i x_j))
+  bandwidth_check_size: 500   # QI1.2 report: QK samples of the main grid size (QI4.3)
+  zz_reps: [1, 2]             # QI2.2: repetitions r of the QK-Z layer (linear chain of R_ZZ)
+  projected_gamma_scales: [0.125, 0.25, 0.5, 1, 2, 4, 8]   # QI2.3 QK-P: gamma = s / median squared distance of the
+                              # training expectation vectors (QK-Z state, product pair), s chosen in the CV of QI4.2
+  shots: [256, 1024, 4096]    # QI3.3 shot grid (N measurements per kernel value; exact = infinity); also used by the QI3.2 check
+  verify_pairs: 20            # QI3.2: random training-test pairs checked against the compute-uncompute circuit
+
+diagnostics:           # QI5, kernel diagnostics (qc_diagnostics.py)
+  shots_reference: 1024       # QI5.1: N of the shot-noise reference (spread of the kernel values vs the noise of one estimate)
+  gd_lambdas: [1.0e-4, 1.0e-3, 1.0e-2, 1.0e-1]   # QI5.3: regularisation of the geometric difference (kernels normalised to trace N)
+  spectrum_rbf_lambda: 1.0e-2     # QI5.4: lambda of QI5.3 at which the RBF closest to each quantum kernel (smallest g) is taken
+  spectrum_extreme_d: 16          # QI5.4: d of the spectra of QK-A / QK-Z at the extreme bandwidths
+
+classical:             # classical kernels on the same reduced features (QI5.3, QJ1)
+  rbf_gamma_scales: [0.125, 0.25, 0.5, 1, 2, 4, 8]   # RBF gamma = s x median gamma of the training sample (7 log-spaced values, QJ1)
+                              # (the same relative grid as the gamma of QK-P, quantum.projected_gamma_scales)
+  # QJ1 baselines (decided with the user): same samples, folds, per-fold PCA and criterion as QI4.2, 20-40
+  # configurations per method (QK-A 20, QK-Z 40); ties -> the first configuration in the order below (simplest first)
+  methods: [RBF, LIN, RFF, MLP, GBT, RBF-wide]
+  rbf_wide_gamma_scales: [0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8]   # RBF-wide: sensitivity check
+                              # of the lower edge of rbf_gamma_scales (not part of the main comparison)
+  linear_C: [0.001, 0.01, 0.1, 1, 10, 100]   # LIN: SVM on the linear kernel (C of RBF / RBF-wide = stage2.svm_C)
+  full_reference_dim: 16      # QJ2 LIN-full: the full standardised vectors are scaled by sqrt(16 / D), so their mean
+                              # squared norm equals that of the 16 PCA components of LIN and every C of linear_C means
+                              # the same regularisation (16 = best d of QI4.3)
+  rff:                        # RFF: random Fourier features of the RBF (gamma = rbf_gamma_scales x median gamma)
+    components: 1000          # + class-balanced logistic regression
+    C: [0.1, 1, 10, 100]
+  mlp:                        # MLP: one hidden layer (ReLU), L-BFGS, seed = sample seed
+    hidden: [8, 32, 128, 512]
+    alpha: [1.0, 0.1, 0.01, 0.001, 0.0001]   # L2 penalty, strongest first (simplest model first)
+    max_iter: 2000
+  gbt:                        # GBT: HistGradientBoostingClassifier, class-balanced, no early stopping
+    max_iter: [100, 300]
+    max_depth: [2, 3, 4, 6]
+    learning_rate: [0.03, 0.1, 0.3]
+
+stage2:                # QI4, stage-2 classifier on the precomputed kernels (qc_experiments.py)
+  svm_C: [0.1, 1, 10, 100]    # QI4.2 grid of the SVM regularisation C
+  cv_folds: 5                 # QI4.2: StratifiedGroupKFold inside the QK training sample, groups = 5 deg blocks,
+                              # shuffled with the sample seed; PCA refitted on every training fold; criterion = mean
+                              # fold AP of the SVM margin, ties -> smaller C, r, s, c
+  main:                       # QI4.3 main grid: maps x quantum.dims at size n, every seed of qk_samples; learning
+    variant: F-X              # curve over qk_samples.sizes at the best d of each map (argmax of the mean CV AP over
+    n: 500                    # the seeds, ties -> smaller d); exact kernels
+    maps: [QK-A, QK-Z, QK-P]
+    per_c_dims: [8, 16]       # Fig. 3b: test AP for every c (other hyper-parameters chosen by CV at that c), grid size only
+  representations:            # QI6.1: the main maps at their best d of QI4.3, CV per representation (each with its
+    variants: [M-W, M-D, F-E, F-C, F-CM]   # own stage 1, QK samples and test candidates); F-X = the QI4.3 runs
+  default_threshold: 0.5      # QI4.4: predicted positive = Platt probability >= this (same rule for every QJ method)
+  svm_check:                  # QI4.1 smoke run (F-X, QK sample of quantum.bandwidth_check_size, first seed): fixed,
+    C: 1                      # not tuned, values; the tuned results are QI4.3
+    c: 0.2
+    reps: 1
+    gamma_scale: 1
+    shots: 1024
+
+noise:                 # QK1-QK2 device noise model and readout mitigation (qc_noise.py)
+  backends: [FakeSherbrooke, FakeFez]   # qiskit_ibm_runtime.fake_provider: Eagle r3 127 qubits (ECR), Heron r2 156 qubits (CZ)
+  dims: [4, 8, 12]
+  map: QK-Z                   # fidelity kernel, product pair function
+  reps: 1
+  variant: F-X
+  n_train: 100                # QK training sample of this size, first seed of qk_samples
+  n_test: 100                 # test candidates of QH5, class-balanced (half positives), seed = seed
+  shots: 4096
+  optimization_level: 3       # transpile once per device and d, angles as parameters
+  method: density_matrix      # Aer method (fastest with noise at d <= 12)
+  batch: 500                  # circuits per Aer call; the npz is rewritten after each batch (restart point)
+
+seed: 2027

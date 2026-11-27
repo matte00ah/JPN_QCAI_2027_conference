@@ -1,0 +1,43 @@
+{
+  "layer": "dem",
+  "step": "QC2.1",
+  "dtype": "float32",
+  "nodata": "NaN",
+  "unit": "m",
+  "values": "SLDEM2015 height above the 1,737.4 km sphere, mean of k x k DEM pixels, bilinear at the WAC pixel centres",
+  "grid": {
+    "north": 29.99998309143077,
+    "west": 0.0,
+    "ppd": 303.23350424149,
+    "lines": 18194,
+    "samples": 27291
+  },
+  "grid_note": "equirectangular WAC grid of R; pixel (r, c) covers lat [north-(r+1)/ppd, north-r/ppd], lon [west+c/ppd, west+(c+1)/ppd]",
+  "block_k": 2,
+  "effective_pixel_m": 118.45058759433391,
+  "sources": [
+    "SLDEM2015_512_00N_30N_000_045_FLOAT",
+    "SLDEM2015_512_00N_30N_045_090_FLOAT",
+    "SLDEM2015_512_30S_00S_000_045_FLOAT",
+    "SLDEM2015_512_30S_00S_045_090_FLOAT"
+  ],
+  "stats": {
+    "pixels": 496532454,
+    "nodata_pixels": 0,
+    "valid_fraction": 1.0,
+    "rows_fully_nodata": [],
+    "cols_fully_nodata": [],
+    "nodata_outside_full_cols": 0,
+    "negative_pixels": 406446652,
+    "negative_fraction": 0.8185701633915756,
+    "min": -5873.0625,
+    "max": 4829.86572265625,
+    "percentiles": {
+      "0.1": -4725.61716796875,
+      "1": -3852.098388671875,
+      "50": -1112.3143310546875,
+      "99": 2134.3712646484355,
+      "99.9": 3166.7582485351795
+    }
+  }
+}

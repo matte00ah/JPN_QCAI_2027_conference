@@ -1,0 +1,35 @@
+% QD-A4 (Table D1), written by qc_figures.py dataset-table
+
+\begin{table*}[t]
+\centering
+\caption{Dataset of the region R (30\textdegree S-30\textdegree N, 0-90\textdegree E) per set: 5\textdegree{} blocks, tiles of 256 px used after the buffer, owned $16\times16$ px sub-tiles (1.6 km) and their labels.}
+\label{tab:dataset_sets}
+\footnotesize
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+Set & Blocks & Area (\%) & Tiles & Sub-tiles & Pos. 1-2 km & Pos. 2-4 km & Pos. 4-8 km & Negative & Ignore & Pos. (\%) \\
+\midrule
+S1-train & 108 & 50.1 & 6{,}731 & 814{,}451 & 35{,}630 & 13{,}560 & 2{,}924 & 761{,}221 & 1{,}116 & 6.4 \\
+S1-val & 24 & 11.1 & 1{,}318 & 159{,}478 & 6{,}892 & 2{,}257 & 591 & 149{,}492 & 246 & 6.1 \\
+QK-pool & 42 & 19.5 & 2{,}359 & 285{,}439 & 12{,}485 & 4{,}631 & 1{,}051 & 266{,}927 & 345 & 6.4 \\
+Test & 42 & 19.3 & 2{,}382 & 288{,}222 & 13{,}068 & 4{,}665 & 1{,}178 & 268{,}884 & 427 & 6.6 \\
+\midrule
+Total & 216 & 100.0 & 12{,}790 & 1{,}547{,}590 & 68{,}075 & 25{,}113 & 5{,}744 & 1{,}446{,}524 & 2{,}134 & 6.4 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Modalities: products, native pixel, effective resolution (native pixel / resolution ratio of the spectral estimate) and quality score of the dataset diagnostics.}
+\label{tab:dataset_modalities}
+\footnotesize
+\begin{tabular}{llrrrrl}
+\toprule
+Modality & Product & Product files & Native pixel (m) & Effective res. (m) & Quality Q & Input layers (100 m grid) \\
+\midrule
+Optical & LROC WAC global mosaic, 643 nm & 2 & 100.0 & 164 & 0.79-0.83 & reflectance ($\times$3) \\
+Elevation & SLDEM2015 (LOLA + Kaguya TC), 512 ppd & 4 & 59.2 & 97 & 0.93-0.94 & relief, slope, hillshade \\
+\bottomrule
+\end{tabular}
+\end{table*}

@@ -1,0 +1,637 @@
+{
+ "QB1.1": {
+  "region": {
+   "lat_min": -30.0,
+   "lat_max": 30.0,
+   "lon_min": 0.0,
+   "lon_max": 90.0
+  },
+  "wac": {
+   "modality": "wac",
+   "grid": {
+    "north": 29.99998309143077,
+    "west": 0.0,
+    "ppd": 303.23350424149,
+    "lines": 18194,
+    "samples": 27291
+   },
+   "extent_deg": {
+    "lat": [
+     -29.99998309143077,
+     29.99998309143077
+    ],
+    "lon": [
+     0.0,
+     89.9999492742923
+    ]
+   },
+   "shape": [
+    18194,
+    27291
+   ],
+   "pixel_ns_m": 100.00000000000159,
+   "pixel_ew_m_at_equator": 100.00000000000159,
+   "pixel_ew_m_at_max_lat": 86.60255513395172,
+   "ew_oversampling_max": 1.1547003416391988,
+   "size_km": [
+    1819.400000000029,
+    2729.100000000043
+   ],
+   "pieces": [
+    {
+     "product_id": "WAC_GLOBAL_E300N0450_100M",
+     "src_rows": [
+      9097,
+      18194
+     ],
+     "src_cols": [
+      0,
+      27291
+     ],
+     "dst_rows": [
+      0,
+      9097
+     ],
+     "dst_cols": [
+      0,
+      27291
+     ],
+     "shift_rc_D15": [
+      1,
+      1
+     ]
+    },
+    {
+     "product_id": "WAC_GLOBAL_E300S0450_100M",
+     "src_rows": [
+      0,
+      9097
+     ],
+     "src_cols": [
+      0,
+      27291
+     ],
+     "dst_rows": [
+      9097,
+      18194
+     ],
+     "dst_cols": [
+      0,
+      27291
+     ],
+     "shift_rc_D15": [
+      1,
+      1
+     ]
+    }
+   ],
+   "seams": [
+    {
+     "axis": "row",
+     "index": 9097,
+     "valid_fraction_per_line": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "seam_step": 0.0016556749341719505,
+     "median_other_steps": 0.0016340714813200925,
+     "seam_ratio": 1.0132206290231598
+    }
+   ],
+   "seams_d15_per_tile": [
+    {
+     "axis": "row",
+     "index": 9097,
+     "valid_fraction_per_line": [
+      1.0,
+      1.0,
+      1.0,
+      0.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "seam_step": NaN,
+     "median_other_steps": 0.0016336787571410126,
+     "seam_ratio": NaN
+    }
+   ],
+   "validity": {
+    "subsample_step": 16,
+    "valid_fraction": 1.0,
+    "first_row_valid_fraction": 0.999963,
+    "last_row_valid_fraction": 0.999963,
+    "first_col_valid_fraction": 1.0,
+    "last_col_valid_fraction": 0.0
+   }
+  },
+  "dem": {
+   "modality": "dem",
+   "grid": {
+    "north": 30.0,
+    "west": 0.0,
+    "ppd": 512.0,
+    "lines": 30720,
+    "samples": 46080
+   },
+   "extent_deg": {
+    "lat": [
+     -30.0,
+     30.0
+    ],
+    "lon": [
+     0.0,
+     90.0
+    ]
+   },
+   "shape": [
+    30720,
+    46080
+   ],
+   "pixel_ns_m": 59.225293797166955,
+   "pixel_ew_m_at_equator": 59.225293797166955,
+   "pixel_ew_m_at_max_lat": 51.290608974943524,
+   "ew_oversampling_max": 1.1547005383792515,
+   "size_km": [
+    1819.4010254489688,
+    2729.1015381734533
+   ],
+   "pieces": [
+    {
+     "product_id": "SLDEM2015_512_00N_30N_000_045_FLOAT",
+     "src_rows": [
+      0,
+      15360
+     ],
+     "src_cols": [
+      0,
+      23040
+     ],
+     "dst_rows": [
+      0,
+      15360
+     ],
+     "dst_cols": [
+      0,
+      23040
+     ],
+     "shift_rc_D15": [
+      0,
+      0
+     ]
+    },
+    {
+     "product_id": "SLDEM2015_512_00N_30N_045_090_FLOAT",
+     "src_rows": [
+      0,
+      15360
+     ],
+     "src_cols": [
+      0,
+      23040
+     ],
+     "dst_rows": [
+      0,
+      15360
+     ],
+     "dst_cols": [
+      23040,
+      46080
+     ],
+     "shift_rc_D15": [
+      0,
+      0
+     ]
+    },
+    {
+     "product_id": "SLDEM2015_512_30S_00S_000_045_FLOAT",
+     "src_rows": [
+      0,
+      15360
+     ],
+     "src_cols": [
+      0,
+      23040
+     ],
+     "dst_rows": [
+      15360,
+      30720
+     ],
+     "dst_cols": [
+      0,
+      23040
+     ],
+     "shift_rc_D15": [
+      0,
+      0
+     ]
+    },
+    {
+     "product_id": "SLDEM2015_512_30S_00S_045_090_FLOAT",
+     "src_rows": [
+      0,
+      15360
+     ],
+     "src_cols": [
+      0,
+      23040
+     ],
+     "dst_rows": [
+      15360,
+      30720
+     ],
+     "dst_cols": [
+      23040,
+      46080
+     ],
+     "shift_rc_D15": [
+      0,
+      0
+     ]
+    }
+   ],
+   "seams": [
+    {
+     "axis": "row",
+     "index": 15360,
+     "valid_fraction_per_line": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "seam_step": 0.0044949217283854325,
+     "median_other_steps": 0.0039532880351671115,
+     "seam_ratio": 1.1370084062684356
+    },
+    {
+     "axis": "col",
+     "index": 23040,
+     "valid_fraction_per_line": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "seam_step": 0.005726517058515886,
+     "median_other_steps": 0.004960033549537002,
+     "seam_ratio": 1.1545319202630056
+    }
+   ],
+   "validity": {
+    "subsample_step": 16,
+    "valid_fraction": 1.0,
+    "first_row_valid_fraction": 1.0,
+    "last_row_valid_fraction": 1.0,
+    "first_col_valid_fraction": 1.0,
+    "last_col_valid_fraction": 1.0
+   }
+  }
+ },
+ "QB2.1": {
+  "catalog_rows": 1296796,
+  "margin_px": 256,
+  "kept": 138337,
+  "in_region": 131182,
+  "in_margin_only": 7155,
+  "in_region_per_band_km": {
+   "0-1": 0,
+   "1-2": 89516,
+   "2-4": 31562,
+   "4-8": 7304,
+   "8-inf": 2800
+  },
+  "in_region_diam_km_max": 1114.52,
+  "lat_range": [
+   -29.9984,
+   29.9998
+  ]
+ },
+ "QB2.2-QB2.3": {
+  "cell_px": 16,
+  "cells_shape": [
+   1137,
+   1705
+  ],
+  "cells": 1938585,
+  "pixels_not_in_full_cells": {
+   "rows": 2,
+   "cols": 11
+  },
+  "craters_in_region": 131182,
+  "craters_outside_full_cells": 95,
+  "target_craters_in_cells": 128290,
+  "craters_above_range_in_cells": 2797,
+  "craters_below_range_in_cells": 0,
+  "cells_with_target": 124812,
+  "cells_with_target_fraction": 0.06438304227052205,
+  "cells_with_ge2_target": 3439,
+  "max_target_per_cell": 3,
+  "dx_range": [
+   -0.5,
+   0.49998411536216736
+  ],
+  "dy_range": [
+   -0.4999963045120239,
+   0.4999816119670868
+  ],
+  "classes": {
+   "positive": 124812,
+   "negative": 1811092,
+   "ignore": 2681
+  },
+  "positive_fraction": 0.06438304227052205,
+  "positives_per_band_km": {
+   "1-2": 86096,
+   "2-4": 31423,
+   "4-8": 7293
+  }
+ },
+ "QB2.4": {
+  "cells": 1938585,
+  "classes": {
+   "positive": 124812,
+   "negative": 1811092,
+   "ignore": 2681
+  },
+  "positive_fraction_of_labelled_cells": 0.06447220523331736,
+  "negatives_per_positive": 14.510559882062623,
+  "positive_cells_by_number_of_centres": {
+   "1": 121373,
+   "2": 3400,
+   "3": 39
+  },
+  "positive_cells_with_ge2_centres_fraction": 0.02755344037432298,
+  "target_craters": 128290,
+  "craters_not_represented": 3478,
+  "craters_not_represented_fraction": 0.02711045288019331,
+  "per_band_km": {
+   "1-2": {
+    "positive_cells": 86096,
+    "share_of_positives": 0.6898054674230042,
+    "fraction_of_labelled_cells": 0.04447327966676033,
+    "negatives_per_positive": 21.035727559933097,
+    "positive_cells_with_ge2_centres": 2555,
+    "craters": 89458,
+    "craters_not_represented": 3362,
+    "craters_not_represented_fraction": 0.037581882000491854
+   },
+   "2-4": {
+    "positive_cells": 31423,
+    "share_of_positives": 0.25176265102714485,
+    "fraction_of_labelled_cells": 0.016231693307106138,
+    "negatives_per_positive": 57.63587181363969,
+    "positive_cells_with_ge2_centres": 734,
+    "craters": 31537,
+    "craters_not_represented": 114,
+    "craters_not_represented_fraction": 0.0036148016615404127
+   },
+   "4-8": {
+    "positive_cells": 7293,
+    "share_of_positives": 0.058431881549850975,
+    "fraction_of_labelled_cells": 0.003767232259450882,
+    "negatives_per_positive": 248.3329219799808,
+    "positive_cells_with_ge2_centres": 150,
+    "craters": 7295,
+    "craters_not_represented": 2,
+    "craters_not_represented_fraction": 0.00027416038382453733
+   }
+  }
+ },
+ "QB3.1": {
+  "block_deg": 5.0,
+  "block_grid": [
+   12,
+   18
+  ],
+  "blocks": 216,
+  "seed": 2027,
+  "density": {
+   "craters_km": [
+    1.0,
+    8.0
+   ],
+   "min": 2.6982190363377647,
+   "max": 77.57498310797699,
+   "stratum_lower_edges": [
+    2.6982190363377647,
+    18.039598379086332,
+    33.093767857163705
+   ]
+  },
+  "per_set": {
+   "s1_train": {
+    "blocks": 108,
+    "blocks_per_stratum": {
+     "0": 36,
+     "1": 36,
+     "2": 36
+    },
+    "area_fraction": 0.5009899008602824,
+    "density_per_1000km2": {
+     "mean": 26.975253914467313,
+     "median": 26.870080132786946
+    },
+    "mean_abs_lat_centre": 14.398148148148149,
+    "cells": 969863,
+    "positive": 62474,
+    "negative": 906076,
+    "ignore": 1313,
+    "positive_fraction_of_labelled": 0.06450260698983015,
+    "positives_per_band_km": {
+     "1-2": 42809,
+     "2-4": 16092,
+     "4-8": 3573
+    }
+   },
+   "s1_val": {
+    "blocks": 24,
+    "blocks_per_stratum": {
+     "0": 8,
+     "1": 8,
+     "2": 8
+    },
+    "area_fraction": 0.11107454113026137,
+    "density_per_1000km2": {
+     "mean": 26.558046652172067,
+     "median": 25.5097387439662
+    },
+    "mean_abs_lat_centre": 15.0,
+    "cells": 215651,
+    "positive": 13495,
+    "negative": 201815,
+    "ignore": 341,
+    "positive_fraction_of_labelled": 0.06267707027077238,
+    "positives_per_band_km": {
+     "1-2": 9557,
+     "2-4": 3137,
+     "4-8": 801
+    }
+   },
+   "qk_pool": {
+    "blocks": 42,
+    "blocks_per_stratum": {
+     "0": 14,
+     "1": 14,
+     "2": 14
+    },
+    "area_fraction": 0.19469545207729724,
+    "density_per_1000km2": {
+     "mean": 27.167707667139656,
+     "median": 25.47827417129396
+    },
+    "mean_abs_lat_centre": 14.761904761904763,
+    "cells": 376015,
+    "positive": 24084,
+    "negative": 351466,
+    "ignore": 465,
+    "positive_fraction_of_labelled": 0.06412994275063241,
+    "positives_per_band_km": {
+     "1-2": 16598,
+     "2-4": 6072,
+     "4-8": 1414
+    }
+   },
+   "test": {
+    "blocks": 42,
+    "blocks_per_stratum": {
+     "0": 14,
+     "1": 14,
+     "2": 14
+    },
+    "area_fraction": 0.19324010593215923,
+    "density_per_1000km2": {
+     "mean": 27.721859472517615,
+     "median": 27.158673372875214
+    },
+    "mean_abs_lat_centre": 16.785714285714285,
+    "cells": 377056,
+    "positive": 24759,
+    "negative": 351735,
+    "ignore": 562,
+    "positive_fraction_of_labelled": 0.06576200417536535,
+    "positives_per_band_km": {
+     "1-2": 17132,
+     "2-4": 6122,
+     "4-8": 1505
+    }
+   }
+  },
+  "check_cells": true,
+  "check_craters": true
+ },
+ "QB3.2": {
+  "tile_px": 256,
+  "stride_px": 176,
+  "tiles_shape": [
+   102,
+   154
+  ],
+  "tiles": 15708,
+  "tiles_kept": 12790,
+  "tiles_dropped": 2918,
+  "pixels_not_in_tiles": {
+   "rows": 162,
+   "cols": 107
+  },
+  "cells": 1938585,
+  "cells_owned_by_a_tile": 1900668,
+  "cells_not_owned_border_of_R": 37917,
+  "cells_used": 1547590,
+  "per_set": {
+   "s1_train": {
+    "tiles_with_centre_in_set": 7837,
+    "tiles_kept": 6731,
+    "tiles_dropped": 1106,
+    "tiles_dropped_fraction": 0.1411254306494832,
+    "cells_in_blocks": 969863,
+    "cells_used": 814451,
+    "cells_used_fraction": 0.8397588112960284,
+    "positive": 52114,
+    "negative": 761221,
+    "ignore": 1116,
+    "positive_fraction_of_labelled": 0.0640744588638138,
+    "positives_per_band_km": {
+     "1-2": 35630,
+     "2-4": 13560,
+     "4-8": 2924
+    },
+    "positives_in_blocks_used_fraction": 0.8341710151422992
+   },
+   "s1_val": {
+    "tiles_with_centre_in_set": 1697,
+    "tiles_kept": 1318,
+    "tiles_dropped": 379,
+    "tiles_dropped_fraction": 0.22333529758397172,
+    "cells_in_blocks": 215651,
+    "cells_used": 159478,
+    "cells_used_fraction": 0.7395189449619988,
+    "positive": 9740,
+    "negative": 149492,
+    "ignore": 246,
+    "positive_fraction_of_labelled": 0.061168609324758844,
+    "positives_per_band_km": {
+     "1-2": 6892,
+     "2-4": 2257,
+     "4-8": 591
+    },
+    "positives_in_blocks_used_fraction": 0.7217487958503149
+   },
+   "qk_pool": {
+    "tiles_with_centre_in_set": 3129,
+    "tiles_kept": 2359,
+    "tiles_dropped": 770,
+    "tiles_dropped_fraction": 0.24608501118568232,
+    "cells_in_blocks": 376015,
+    "cells_used": 285439,
+    "cells_used_fraction": 0.7591159927130566,
+    "positive": 18167,
+    "negative": 266927,
+    "ignore": 345,
+    "positive_fraction_of_labelled": 0.06372284229061292,
+    "positives_per_band_km": {
+     "1-2": 12485,
+     "2-4": 4631,
+     "4-8": 1051
+    },
+    "positives_in_blocks_used_fraction": 0.7543182195648563
+   },
+   "test": {
+    "tiles_with_centre_in_set": 3045,
+    "tiles_kept": 2382,
+    "tiles_dropped": 663,
+    "tiles_dropped_fraction": 0.21773399014778325,
+    "cells_in_blocks": 377056,
+    "cells_used": 288222,
+    "cells_used_fraction": 0.7644010438767717,
+    "positive": 18911,
+    "negative": 268884,
+    "ignore": 427,
+    "positive_fraction_of_labelled": 0.06570996716412725,
+    "positives_per_band_km": {
+     "1-2": 13068,
+     "2-4": 4665,
+     "4-8": 1178
+    },
+    "positives_in_blocks_used_fraction": 0.7638030615129852
+   }
+  },
+  "check_overlapping_kept_tiles_of_different_sets": 0,
+  "check_used_cells_outside_their_set_blocks": 0
+ }
+}

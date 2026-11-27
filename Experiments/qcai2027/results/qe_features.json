@@ -1,0 +1,322 @@
+{
+ "QE1.1": {
+  "_meta": {
+   "step": "QE1.1",
+   "script": "qc_features.py",
+   "command": "backbone",
+   "time": "2026-11-19T11:28:17",
+   "config_md5": "99768c2ccd4157b1967a3f98a9c1f7be"
+  },
+  "model": "timm/vit_small_patch14_dinov2.lvd142m",
+  "device": "cpu",
+  "img_size": 224,
+  "resize": "bilinear, antialias",
+  "patch_px": 14,
+  "token_grid": [
+   16,
+   16
+  ],
+  "token_dim": 384,
+  "prefix_tokens_dropped": 1,
+  "check_frozen": true,
+  "params_millions": 21.629,
+  "check_mean_std_equal_pretrained": true,
+  "tiles": [
+   112,
+   1142,
+   2191,
+   4433,
+   5992,
+   7440,
+   7715,
+   9854
+  ],
+  "inputs": {
+   "wac": {
+    "layers": [
+     "wac",
+     "wac",
+     "wac"
+    ],
+    "tokens_shape": [
+     8,
+     16,
+     16,
+     384
+    ],
+    "resized_min_max": [
+     0.0,
+     1.0
+    ],
+    "max_abs_diff_resize_normalise_commute": 1.19e-06,
+    "check_finite": true,
+    "max_abs_diff_repeat": 0.0,
+    "max_abs_diff_batch_vs_single": 0.0,
+    "token_norm_p5_p50_p95": [
+     44.45,
+     47.43,
+     50.23
+    ],
+    "seconds_per_tile": 0.3185
+   },
+   "dem": {
+    "layers": [
+     "relief",
+     "slope",
+     "hillshade"
+    ],
+    "tokens_shape": [
+     8,
+     16,
+     16,
+     384
+    ],
+    "resized_min_max": [
+     0.0,
+     1.0
+    ],
+    "max_abs_diff_resize_normalise_commute": 9.54e-07,
+    "check_finite": true,
+    "max_abs_diff_repeat": 0.0,
+    "max_abs_diff_batch_vs_single": 0.0,
+    "token_norm_p5_p50_p95": [
+     43.51,
+     46.83,
+     49.34
+    ],
+    "seconds_per_tile": 0.2949
+   },
+   "early": {
+    "layers": [
+     "wac",
+     "relief",
+     "slope"
+    ],
+    "tokens_shape": [
+     8,
+     16,
+     16,
+     384
+    ],
+    "resized_min_max": [
+     0.0,
+     1.0
+    ],
+    "max_abs_diff_resize_normalise_commute": 9.54e-07,
+    "check_finite": true,
+    "max_abs_diff_repeat": 0.0,
+    "max_abs_diff_batch_vs_single": 0.0,
+    "token_norm_p5_p50_p95": [
+     43.96,
+     47.17,
+     50.3
+    ],
+    "seconds_per_tile": 0.3051
+   }
+  }
+ },
+ "QE1.2": {
+  "_meta": {
+   "step": "QE1.2",
+   "script": "qc_features.py",
+   "command": "alignment --device cpu",
+   "time": "2026-11-19T11:43:35",
+   "config_md5": "99768c2ccd4157b1967a3f98a9c1f7be"
+  },
+  "positional_embedding": {
+   "native_grid_of_the_weights": 37,
+   "token_grid": 16,
+   "max_abs_diff_tokens_fixed_vs_dynamic": 0.0,
+   "min_cosine_fixed_vs_dynamic": 1.0,
+   "mean_cosine_fixed_vs_dynamic": 1.0
+  },
+  "occlusion": {
+   "tiles": [
+    12339,
+    115,
+    1566,
+    112,
+    2193,
+    4435,
+    5994,
+    9856
+   ],
+   "cells_per_tile": 24,
+   "positive_cells": 101,
+   "fill": "tile mean of each layer over one 16 x 16 px source cell",
+   "per_input": {
+    "wac": {
+     "cells": 192,
+     "fraction_argmax_at_the_cell": 0.9896,
+     "fraction_within_1_cell": 1.0,
+     "fraction_at_the_cell_positive_cells": 1.0,
+     "change_ratio_cell_vs_median_other_p5_p50": [
+      8.5,
+      16.5
+     ],
+     "offsets_not_zero": [
+      [
+       0,
+       1
+      ]
+     ]
+    },
+    "dem": {
+     "cells": 192,
+     "fraction_argmax_at_the_cell": 1.0,
+     "fraction_within_1_cell": 1.0,
+     "fraction_at_the_cell_positive_cells": 1.0,
+     "change_ratio_cell_vs_median_other_p5_p50": [
+      8.4,
+      13.7
+     ],
+     "offsets_not_zero": []
+    },
+    "early": {
+     "cells": 192,
+     "fraction_argmax_at_the_cell": 1.0,
+     "fraction_within_1_cell": 1.0,
+     "fraction_at_the_cell_positive_cells": 1.0,
+     "change_ratio_cell_vs_median_other_p5_p50": [
+      10.1,
+      16.1
+     ],
+     "offsets_not_zero": []
+    }
+   }
+  }
+ },
+ "QE2.1": {
+  "_meta": {
+   "step": "QE2.1",
+   "script": "qc_features.py",
+   "command": "extract --inputs wac dem early --device cuda",
+   "time": "2026-11-19T12:03:31",
+   "config_md5": "99768c2ccd4157b1967a3f98a9c1f7be"
+  },
+  "tiles": 12790,
+  "tiles_by_set": {
+   "qk_pool": 2359,
+   "s1_train": 6731,
+   "s1_val": 1318,
+   "test": 2382
+  },
+  "rows_extracted_in_this_run": 12790,
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "gpu": "NVIDIA H100 NVL",
+  "batch": 64,
+  "seconds": 315.7,
+  "seconds_per_tile_all_inputs": 0.0247,
+  "check_tiles": 16,
+  "inputs": {
+   "wac": {
+    "layers": [
+     "wac",
+     "wac",
+     "wac"
+    ],
+    "file": "tokens/wac.npy",
+    "shape": [
+     12790,
+     16,
+     16,
+     384
+    ],
+    "dtype": "float16",
+    "size_gb": 2.51,
+    "check_all_rows_done": true,
+    "check_finite": true,
+    "token_norm_p1_p50_p99": [
+     42.38,
+     46.93,
+     51.23
+    ],
+    "float16_max_abs_err": 0.00636,
+    "float16_min_cosine": 1.0,
+    "device_vs_cpu_max_abs_diff": 0.000415,
+    "device_vs_cpu_min_cosine": 1.0
+   },
+   "dem": {
+    "layers": [
+     "relief",
+     "slope",
+     "hillshade"
+    ],
+    "file": "tokens/dem.npy",
+    "shape": [
+     12790,
+     16,
+     16,
+     384
+    ],
+    "dtype": "float16",
+    "size_gb": 2.51,
+    "check_all_rows_done": true,
+    "check_finite": true,
+    "token_norm_p1_p50_p99": [
+     41.96,
+     46.4,
+     50.25
+    ],
+    "float16_max_abs_err": 0.00391,
+    "float16_min_cosine": 1.0,
+    "device_vs_cpu_max_abs_diff": 0.000195,
+    "device_vs_cpu_min_cosine": 1.0
+   }
+  }
+ },
+ "QE2.2": {
+  "_meta": {
+   "step": "QE2.2",
+   "script": "qc_features.py",
+   "command": "extract --inputs wac dem early --device cuda",
+   "time": "2026-11-19T12:03:31",
+   "config_md5": "99768c2ccd4157b1967a3f98a9c1f7be"
+  },
+  "tiles": 12790,
+  "tiles_by_set": {
+   "qk_pool": 2359,
+   "s1_train": 6731,
+   "s1_val": 1318,
+   "test": 2382
+  },
+  "rows_extracted_in_this_run": 12790,
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "gpu": "NVIDIA H100 NVL",
+  "batch": 64,
+  "seconds": 315.7,
+  "seconds_per_tile_all_inputs": 0.0247,
+  "check_tiles": 16,
+  "inputs": {
+   "early": {
+    "layers": [
+     "wac",
+     "relief",
+     "slope"
+    ],
+    "file": "tokens/early.npy",
+    "shape": [
+     12790,
+     16,
+     16,
+     384
+    ],
+    "dtype": "float16",
+    "size_gb": 2.51,
+    "check_all_rows_done": true,
+    "check_finite": true,
+    "token_norm_p1_p50_p99": [
+     42.4,
+     46.78,
+     50.86
+    ],
+    "float16_max_abs_err": 0.00775,
+    "float16_min_cosine": 1.0,
+    "device_vs_cpu_max_abs_diff": 0.000397,
+    "device_vs_cpu_min_cosine": 1.0
+   }
+  }
+ }
+}

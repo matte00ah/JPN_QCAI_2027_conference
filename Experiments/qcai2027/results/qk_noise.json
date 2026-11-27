@@ -1,0 +1,395 @@
+{
+ "QK1": {
+  "_meta": {
+   "step": "QK1",
+   "script": "qc_noise.py",
+   "command": "summary",
+   "time": "2026-11-25T10:11:01",
+   "config_md5": "f2b66f4ed21b5fe3acf73802ac1fe80f"
+  },
+  "variant": "F-X",
+  "map": "QK-Z",
+  "reps": 1,
+  "n_train": 100,
+  "n_test": "100 class-balanced from the QH5 test candidates",
+  "shots": 4096,
+  "method": "density_matrix",
+  "optimization_level": 3,
+  "threshold": 0.5,
+  "results": {
+   "FakeSherbrooke_d4": {
+    "circuit": {
+     "depth": 64,
+     "two_qubit_gates": 10,
+     "gates": 119,
+     "ops": {
+      "rz": 66,
+      "sx": 43,
+      "ecr": 10,
+      "measure": 4
+     },
+     "physical_qubits": [
+      122,
+      123,
+      124,
+      125
+     ]
+    },
+    "device_noise": {
+     "rel_frobenius_error_train_psd": 0.0675,
+     "rel_frobenius_error_test": 0.0681,
+     "offdiag_mean_train": 0.8609,
+     "mean_test": 0.8704,
+     "fit_slope_a": 0.9124,
+     "fit_intercept_b": 0.01848,
+     "depolarising_b_expected": 0.00548,
+     "min_eigenvalue_before_psd": -0.0298,
+     "eigenvalues_clipped": 9,
+     "f1": 0.6667,
+     "precision": 0.7209,
+     "recall": 0.62,
+     "ap": 0.7745,
+     "measured_diagonal_mean": 0.9311,
+     "prediction_agreement_with_exact": 0.81
+    }
+   },
+   "FakeFez_d4": {
+    "circuit": {
+     "depth": 56,
+     "two_qubit_gates": 10,
+     "gates": 84,
+     "ops": {
+      "rz": 46,
+      "sx": 28,
+      "cz": 10,
+      "measure": 4
+     },
+     "physical_qubits": [
+      136,
+      143,
+      142,
+      141
+     ]
+    },
+    "device_noise": {
+     "rel_frobenius_error_train_psd": 0.0466,
+     "rel_frobenius_error_test": 0.0471,
+     "offdiag_mean_train": 0.8803,
+     "mean_test": 0.8901,
+     "fit_slope_a": 0.9426,
+     "fit_intercept_b": 0.01,
+     "depolarising_b_expected": 0.00359,
+     "min_eigenvalue_before_psd": -0.047,
+     "eigenvalues_clipped": 18,
+     "f1": 0.6596,
+     "precision": 0.7045,
+     "recall": 0.62,
+     "ap": 0.7774,
+     "measured_diagonal_mean": 0.953,
+     "prediction_agreement_with_exact": 0.84
+    }
+   },
+   "d4": {
+    "c": 0.1,
+    "C": 10.0,
+    "cv_ap": 0.7637,
+    "uniform_floor": 0.0625,
+    "exact": {
+     "rel_frobenius_error_train_psd": 0.0,
+     "rel_frobenius_error_test": 0.0,
+     "offdiag_mean_train": 0.9233,
+     "mean_test": 0.9337,
+     "fit_slope_a": 1.0,
+     "fit_intercept_b": -0.0,
+     "depolarising_b_expected": -0.0,
+     "min_eigenvalue_before_psd": 1.74e-13,
+     "eigenvalues_clipped": 0,
+     "f1": 0.7021,
+     "precision": 0.75,
+     "recall": 0.66,
+     "ap": 0.792
+    },
+    "shots_N4096": {
+     "rel_frobenius_error_train_psd": 0.0033,
+     "rel_frobenius_error_test": 0.0042,
+     "offdiag_mean_train": 0.9232,
+     "mean_test": 0.9337,
+     "fit_slope_a": 1.0,
+     "fit_intercept_b": -3e-05,
+     "depolarising_b_expected": 0.0,
+     "min_eigenvalue_before_psd": -0.073,
+     "eigenvalues_clipped": 46,
+     "f1": 0.6526,
+     "precision": 0.6889,
+     "recall": 0.62,
+     "ap": 0.7885,
+     "prediction_agreement_with_exact": 0.91
+    }
+   },
+   "FakeSherbrooke_d8": {
+    "circuit": {
+     "depth": 122,
+     "two_qubit_gates": 26,
+     "gates": 237,
+     "ops": {
+      "rz": 132,
+      "sx": 70,
+      "ecr": 26,
+      "x": 9,
+      "measure": 8
+     },
+     "physical_qubits": [
+      110,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124
+     ]
+    },
+    "device_noise": {
+     "rel_frobenius_error_train_psd": 0.2866,
+     "rel_frobenius_error_test": 0.2884,
+     "offdiag_mean_train": 0.684,
+     "mean_test": 0.6883,
+     "fit_slope_a": 0.6835,
+     "fit_intercept_b": 0.02736,
+     "depolarising_b_expected": 0.00124,
+     "min_eigenvalue_before_psd": 0.155,
+     "eigenvalues_clipped": 0,
+     "f1": 0.7339,
+     "precision": 0.678,
+     "recall": 0.8,
+     "ap": 0.7684,
+     "measured_diagonal_mean": 0.7109,
+     "prediction_agreement_with_exact": 0.71
+    }
+   },
+   "FakeFez_d8": {
+    "circuit": {
+     "depth": 128,
+     "two_qubit_gates": 26,
+     "gates": 200,
+     "ops": {
+      "rz": 106,
+      "sx": 68,
+      "cz": 26,
+      "measure": 8
+     },
+     "physical_qubits": [
+      126,
+      125,
+      124,
+      123,
+      136,
+      143,
+      142,
+      141
+     ]
+    },
+    "device_noise": {
+     "rel_frobenius_error_train_psd": 0.1124,
+     "rel_frobenius_error_test": 0.1132,
+     "offdiag_mean_train": 0.8524,
+     "mean_test": 0.8577,
+     "fit_slope_a": 0.8724,
+     "fit_intercept_b": 0.01417,
+     "depolarising_b_expected": 0.0005,
+     "min_eigenvalue_before_psd": 0.0104,
+     "eigenvalues_clipped": 0,
+     "f1": 0.7,
+     "precision": 0.7,
+     "recall": 0.7,
+     "ap": 0.7402,
+     "measured_diagonal_mean": 0.887,
+     "prediction_agreement_with_exact": 0.78
+    }
+   },
+   "d8": {
+    "c": 0.05,
+    "C": 10.0,
+    "cv_ap": 0.7807,
+    "uniform_floor": 0.00391,
+    "exact": {
+     "rel_frobenius_error_train_psd": 0.0,
+     "rel_frobenius_error_test": 0.0,
+     "offdiag_mean_train": 0.9608,
+     "mean_test": 0.967,
+     "fit_slope_a": 1.0,
+     "fit_intercept_b": -0.0,
+     "depolarising_b_expected": -0.0,
+     "min_eigenvalue_before_psd": 5.59e-08,
+     "eigenvalues_clipped": 0,
+     "f1": 0.6809,
+     "precision": 0.7273,
+     "recall": 0.64,
+     "ap": 0.7941
+    },
+    "shots_N4096": {
+     "rel_frobenius_error_train_psd": 0.0024,
+     "rel_frobenius_error_test": 0.0029,
+     "offdiag_mean_train": 0.9608,
+     "mean_test": 0.9671,
+     "fit_slope_a": 0.9985,
+     "fit_intercept_b": 0.00149,
+     "depolarising_b_expected": 1e-05,
+     "min_eigenvalue_before_psd": -0.0534,
+     "eigenvalues_clipped": 45,
+     "f1": 0.6739,
+     "precision": 0.7381,
+     "recall": 0.62,
+     "ap": 0.7787,
+     "prediction_agreement_with_exact": 0.94
+    }
+   },
+   "d12": {
+    "c": 0.2,
+    "C": 1.0,
+    "cv_ap": 0.7701,
+    "uniform_floor": 0.000244,
+    "exact": {
+     "rel_frobenius_error_train_psd": 0.0,
+     "rel_frobenius_error_test": 0.0,
+     "offdiag_mean_train": 0.3897,
+     "mean_test": 0.4558,
+     "fit_slope_a": 1.0,
+     "fit_intercept_b": 0.0,
+     "depolarising_b_expected": 0.0,
+     "min_eigenvalue_before_psd": 0.0131,
+     "eigenvalues_clipped": 0,
+     "f1": 0.7292,
+     "precision": 0.7609,
+     "recall": 0.7,
+     "ap": 0.788
+    },
+    "shots_N4096": {
+     "rel_frobenius_error_train_psd": 0.0162,
+     "rel_frobenius_error_test": 0.0151,
+     "offdiag_mean_train": 0.3896,
+     "mean_test": 0.4557,
+     "fit_slope_a": 0.9997,
+     "fit_intercept_b": -0.0,
+     "depolarising_b_expected": 0.0,
+     "min_eigenvalue_before_psd": -0.0544,
+     "eigenvalues_clipped": 9,
+     "f1": 0.7292,
+     "precision": 0.7609,
+     "recall": 0.7,
+     "ap": 0.7918,
+     "prediction_agreement_with_exact": 0.98
+    }
+   }
+  },
+  "checks": {
+   "FakeSherbrooke_d4_transpiled_vs_exact_max_abs_diff": 4e-15,
+   "FakeFez_d4_transpiled_vs_exact_max_abs_diff": 5.6e-16,
+   "FakeSherbrooke_d8_transpiled_vs_exact_max_abs_diff": 5.9e-15,
+   "FakeFez_d8_transpiled_vs_exact_max_abs_diff": 1.2e-15,
+   "transpiled_below_1e-8": true
+  },
+  "note": "K = share of all-zero outcomes of U(x) U(x')^+ transpiled once per device and d (angles as parameters) on AerSimulator.from_backend(fake backend); training diagonal set to 1 (measured_diagonal_mean = the measured one); training matrix projected on the PSD cone before the SVM, test matrix as estimated; c, C from the QI4.2 CV on the exact kernel, the same for every estimate; fit = least squares K_est = a K + b on the off-diagonal training and the test values, depolarising_b_expected = (1 - a) / 2^d; no idle-time noise (circuits not scheduled)"
+ },
+ "QK2": {
+  "_meta": {
+   "step": "QK2",
+   "script": "qc_noise.py",
+   "command": "summary",
+   "time": "2026-11-25T10:11:01",
+   "config_md5": "f2b66f4ed21b5fe3acf73802ac1fe80f"
+  },
+  "variant": "F-X",
+  "map": "QK-Z",
+  "reps": 1,
+  "n_train": 100,
+  "n_test": "100 class-balanced from the QH5 test candidates",
+  "shots": 4096,
+  "method": "density_matrix",
+  "optimization_level": 3,
+  "threshold": 0.5,
+  "results": {
+   "FakeSherbrooke_d4": {
+    "readout_error_mean": 0.007,
+    "mitigated": {
+     "rel_frobenius_error_train_psd": 0.0447,
+     "rel_frobenius_error_test": 0.0452,
+     "offdiag_mean_train": 0.8821,
+     "mean_test": 0.892,
+     "fit_slope_a": 0.9423,
+     "fit_intercept_b": 0.01211,
+     "depolarising_b_expected": 0.00361,
+     "min_eigenvalue_before_psd": -0.0566,
+     "eigenvalues_clipped": 20,
+     "f1": 0.6809,
+     "precision": 0.7273,
+     "recall": 0.64,
+     "ap": 0.7742,
+     "measured_diagonal_mean": 0.9546,
+     "prediction_agreement_with_exact": 0.82
+    }
+   },
+   "FakeFez_d4": {
+    "readout_error_mean": 0.0053,
+    "mitigated": {
+     "rel_frobenius_error_train_psd": 0.0256,
+     "rel_frobenius_error_test": 0.0259,
+     "offdiag_mean_train": 0.9,
+     "mean_test": 0.9101,
+     "fit_slope_a": 0.9683,
+     "fit_intercept_b": 0.00593,
+     "depolarising_b_expected": 0.00198,
+     "min_eigenvalue_before_psd": -0.0712,
+     "eigenvalues_clipped": 30,
+     "f1": 0.6452,
+     "precision": 0.6977,
+     "recall": 0.6,
+     "ap": 0.7764,
+     "measured_diagonal_mean": 0.9747,
+     "prediction_agreement_with_exact": 0.83
+    }
+   },
+   "FakeSherbrooke_d8": {
+    "readout_error_mean": 0.0106,
+    "mitigated": {
+     "rel_frobenius_error_train_psd": 0.2254,
+     "rel_frobenius_error_test": 0.2268,
+     "offdiag_mean_train": 0.7432,
+     "mean_test": 0.7479,
+     "fit_slope_a": 0.7496,
+     "fit_intercept_b": 0.02295,
+     "depolarising_b_expected": 0.00098,
+     "min_eigenvalue_before_psd": 0.0793,
+     "eigenvalues_clipped": 0,
+     "f1": 0.7091,
+     "precision": 0.65,
+     "recall": 0.78,
+     "ap": 0.7546,
+     "measured_diagonal_mean": 0.7726,
+     "prediction_agreement_with_exact": 0.68
+    }
+   },
+   "FakeFez_d8": {
+    "readout_error_mean": 0.0058,
+    "mitigated": {
+     "rel_frobenius_error_train_psd": 0.071,
+     "rel_frobenius_error_test": 0.0716,
+     "offdiag_mean_train": 0.8925,
+     "mean_test": 0.8981,
+     "fit_slope_a": 0.917,
+     "fit_intercept_b": 0.01135,
+     "depolarising_b_expected": 0.00032,
+     "min_eigenvalue_before_psd": -0.0367,
+     "eigenvalues_clipped": 11,
+     "f1": 0.6869,
+     "precision": 0.6939,
+     "recall": 0.68,
+     "ap": 0.7409,
+     "measured_diagonal_mean": 0.9289,
+     "prediction_agreement_with_exact": 0.79
+    }
+   }
+  },
+  "note": "M3 (mthree) calibrated on the measured physical qubits with 10,000 shots on the same noisy simulator (calibration not seeded), apply_correction on the same counts as QK1, all-zero quasi-probability clipped to [0, 1]; readout_error_mean = mean over the qubits of 1 - trace / 2 of the calibration matrix"
+ }
+}

@@ -1,0 +1,371 @@
+{
+ "QD-A1": {
+  "density_per_1000km2_per_set": {
+   "s1_train": {
+    "blocks": 108,
+    "min": 2.7,
+    "q25": 14.46,
+    "median": 26.87,
+    "q75": 38.42,
+    "max": 70.61
+   },
+   "s1_val": {
+    "blocks": 24,
+    "min": 5.56,
+    "q25": 15.47,
+    "median": 25.51,
+    "q75": 35.65,
+    "max": 51.39
+   },
+   "qk_pool": {
+    "blocks": 42,
+    "min": 3.11,
+    "q25": 14.65,
+    "median": 25.48,
+    "q75": 35.43,
+    "max": 77.57
+   },
+   "test": {
+    "blocks": 42,
+    "min": 2.73,
+    "q25": 16.23,
+    "median": 27.16,
+    "q75": 37.57,
+    "max": 58.04
+   }
+  }
+ },
+ "QD-A2": {
+  "area_R_km2": 4741541,
+  "craters_in_R": 131182,
+  "fit_2_8_km": {
+   "slope": -1.965,
+   "log10_a": -1.4737
+  },
+  "observed_over_power_law": {
+   "1.00": 0.824,
+   "1.41": 0.97,
+   "2.00": 1.021,
+   "range_in_fit_km": [
+    0.958,
+    1.045
+   ],
+   "max_above_8_km": 1.827
+  },
+  "local_cumulative_slope_per_sqrt2_bin_km": {
+   "1.00-1.41": -1.49,
+   "1.41-2.00": -1.82,
+   "2.00-2.83": -2.0,
+   "2.83-4.00": -2.09,
+   "4.00-5.66": -1.98,
+   "5.66-8.00": -1.73,
+   "8.00-11.31": -1.51,
+   "11.31-16.00": -1.49,
+   "16.00-22.63": -1.49,
+   "22.63-32.00": -1.83,
+   "32.00-45.25": -2.19
+  }
+ },
+ "QD-A3": {
+  "tiles": {
+   "dense": {
+    "percentile": 90,
+    "tile": 12339,
+    "set": "s1_train",
+    "lat_lon": [
+     -16.85,
+     11.45
+    ],
+    "positive_owned_per_band_1_2_4_8_km": [
+     8,
+     8,
+     1
+    ]
+   },
+   "medium": {
+    "percentile": 50,
+    "tile": 115,
+    "set": "s1_train",
+    "lat_lon": [
+     29.58,
+     67.17
+    ],
+    "positive_owned_per_band_1_2_4_8_km": [
+     4,
+     1,
+     1
+    ]
+   },
+   "sparse": {
+    "percentile": 10,
+    "tile": 1566,
+    "set": "s1_train",
+    "lat_lon": [
+     23.77,
+     15.51
+    ],
+    "positive_owned_per_band_1_2_4_8_km": [
+     1,
+     0,
+     0
+    ]
+   }
+  }
+ },
+ "QD-A5": {
+  "_meta": {
+   "step": "QD-A5",
+   "script": "qc_figures.py",
+   "command": "complementarity --pdf",
+   "time": "2026-11-19T11:11:42",
+   "config_md5": "d1c81355e9bb62f90a586ee634b30fcd"
+  },
+  "hillshade_azimuth_deg": {
+   "wac_sun": 270.0,
+   "north": 0.0
+  },
+  "hillshade_altitude_deg": 30.0,
+  "correlation_per_subtile": {
+   "wac_sun": {
+    "all": {
+     "subtiles": 1547589,
+     "p5": 0.239,
+     "p25": 0.624,
+     "p50": 0.802,
+     "p75": 0.892,
+     "p95": 0.955,
+     "fraction_r_ge_0.5": 0.837,
+     "fraction_abs_r_lt_0.2": 0.038
+    },
+    "positive": {
+     "subtiles": 98932,
+     "p5": 0.746,
+     "p25": 0.87,
+     "p50": 0.914,
+     "p75": 0.943,
+     "p95": 0.969,
+     "fraction_r_ge_0.5": 0.994,
+     "fraction_abs_r_lt_0.2": 0.001
+    },
+    "negative": {
+     "subtiles": 1446523,
+     "p5": 0.229,
+     "p25": 0.605,
+     "p50": 0.789,
+     "p75": 0.884,
+     "p95": 0.952,
+     "fraction_r_ge_0.5": 0.826,
+     "fraction_abs_r_lt_0.2": 0.04
+    },
+    "stratum_0": {
+     "subtiles": 521307,
+     "p5": 0.127,
+     "p25": 0.401,
+     "p50": 0.653,
+     "p75": 0.828,
+     "p95": 0.938,
+     "fraction_r_ge_0.5": 0.66,
+     "fraction_abs_r_lt_0.2": 0.092
+    },
+    "stratum_1": {
+     "subtiles": 519038,
+     "p5": 0.378,
+     "p25": 0.696,
+     "p50": 0.827,
+     "p75": 0.902,
+     "p95": 0.958,
+     "fraction_r_ge_0.5": 0.904,
+     "fraction_abs_r_lt_0.2": 0.014
+    },
+    "stratum_2": {
+     "subtiles": 507244,
+     "p5": 0.507,
+     "p25": 0.752,
+     "p50": 0.85,
+     "p75": 0.912,
+     "p95": 0.961,
+     "fraction_r_ge_0.5": 0.952,
+     "fraction_abs_r_lt_0.2": 0.007
+    }
+   },
+   "north": {
+    "all": {
+     "subtiles": 1547582,
+     "p5": -0.566,
+     "p25": -0.184,
+     "p50": -0.009,
+     "p75": 0.164,
+     "p95": 0.54,
+     "fraction_r_ge_0.5": 0.061,
+     "fraction_abs_r_lt_0.2": 0.549
+    },
+    "positive": {
+     "subtiles": 98932,
+     "p5": -0.525,
+     "p25": -0.189,
+     "p50": 0.023,
+     "p75": 0.234,
+     "p95": 0.562,
+     "fraction_r_ge_0.5": 0.073,
+     "fraction_abs_r_lt_0.2": 0.476
+    },
+    "negative": {
+     "subtiles": 1446516,
+     "p5": -0.569,
+     "p25": -0.183,
+     "p50": -0.011,
+     "p75": 0.159,
+     "p95": 0.538,
+     "fraction_r_ge_0.5": 0.06,
+     "fraction_abs_r_lt_0.2": 0.554
+    },
+    "stratum_0": {
+     "subtiles": 521301,
+     "p5": -0.535,
+     "p25": -0.161,
+     "p50": -0.031,
+     "p75": 0.08,
+     "p95": 0.404,
+     "fraction_r_ge_0.5": 0.033,
+     "fraction_abs_r_lt_0.2": 0.671
+    },
+    "stratum_1": {
+     "subtiles": 519038,
+     "p5": -0.62,
+     "p25": -0.25,
+     "p50": -0.044,
+     "p75": 0.135,
+     "p95": 0.506,
+     "fraction_r_ge_0.5": 0.051,
+     "fraction_abs_r_lt_0.2": 0.512
+    },
+    "stratum_2": {
+     "subtiles": 507243,
+     "p5": -0.524,
+     "p25": -0.136,
+     "p50": 0.077,
+     "p75": 0.284,
+     "p95": 0.628,
+     "fraction_r_ge_0.5": 0.1,
+     "fraction_abs_r_lt_0.2": 0.461
+    }
+   },
+   "undefined_subtiles": {
+    "wac_sun": 1,
+    "north": 8
+   },
+   "stratum_density_median_per_1000km2": {
+    "stratum_0": 11.6,
+    "stratum_1": 26.1,
+    "stratum_2": 42.7
+   }
+  },
+  "rim_visibility": {
+   "craters": {
+    "1-2": 70730,
+    "2-4": 25207,
+    "4-8": 5727,
+    "all": 101664
+   },
+   "craters_dropped_ring_outside_R_or_no_data": 26,
+   "rings_rho": {
+    "floor": [
+     0.0,
+     0.5
+    ],
+    "walls": [
+     0.5,
+     1.0
+    ],
+    "rim": [
+     0.9,
+     1.1
+    ],
+    "background": [
+     1.5,
+     2.5
+    ]
+   },
+   "z_min": 2.0,
+   "fractions_per_band": {
+    "1-2": {
+     "both": 0.251,
+     "wac_only": 0.287,
+     "dem_only": 0.025,
+     "neither": 0.438
+    },
+    "2-4": {
+     "both": 0.221,
+     "wac_only": 0.199,
+     "dem_only": 0.046,
+     "neither": 0.533
+    },
+    "4-8": {
+     "both": 0.3,
+     "wac_only": 0.09,
+     "dem_only": 0.123,
+     "neither": 0.487
+    },
+    "all": {
+     "both": 0.246,
+     "wac_only": 0.254,
+     "dem_only": 0.035,
+     "neither": 0.465
+    }
+   },
+   "median_z": {
+    "1-2": {
+     "wac": 2.11,
+     "dem": 1.13
+    },
+    "2-4": {
+     "wac": 1.79,
+     "dem": 1.22
+    },
+    "4-8": {
+     "wac": 1.7,
+     "dem": 1.75
+    }
+   },
+   "spearman_z_wac_z_dem": 0.666,
+   "sensitivity": {
+    "z_min_1": {
+     "1-2": {
+      "wac_only": 0.323,
+      "dem_only": 0.017
+     },
+     "2-4": {
+      "wac_only": 0.249,
+      "dem_only": 0.043
+     },
+     "4-8": {
+      "wac_only": 0.091,
+      "dem_only": 0.117
+     },
+     "all": {
+      "wac_only": 0.292,
+      "dem_only": 0.029
+     }
+    },
+    "z_min_3": {
+     "1-2": {
+      "wac_only": 0.133,
+      "dem_only": 0.032
+     },
+     "2-4": {
+      "wac_only": 0.072,
+      "dem_only": 0.042
+     },
+     "4-8": {
+      "wac_only": 0.036,
+      "dem_only": 0.084
+     },
+     "all": {
+      "wac_only": 0.112,
+      "dem_only": 0.037
+     }
+    }
+   }
+  }
+ }
+}

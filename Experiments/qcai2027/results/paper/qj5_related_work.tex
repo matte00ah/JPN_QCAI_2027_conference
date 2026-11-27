@@ -1,0 +1,26 @@
+% QJ5 (JPN_QCAI_conference_plan.md): literature context of the crater-detection results, qualitative only
+% (decided with the user 2026-11-25: no table of published numbers, the tasks and data are not comparable).
+% Part 1 goes in Sec. 2 (Related work), part 2 in Sec. 6 (Discussion, limits). References: qj5_references.bib.
+
+% --- Part 1: Related work, crater detection (~0.15 page) ---
+\paragraph{Crater detection}
+Deep learning is the standard tool for automatic crater cataloguing. DeepMoon~\cite{silburt2019deepmoon} trains a
+convolutional network on lunar digital elevation maps, recovers 92\,\% of the craters of a human-made test catalogue
+and transfers to Mercury. Object detectors of the YOLO family target the small craters that dominate the counts,
+e.g.\ YOLO-Crater~\cite{mu2023yolocrater}. Closer to our setting, several works combine optical images and elevation
+data: Tewari et~al.~\cite{tewari2020automated} stack optical, elevation and slope maps as the input of a Mask R-CNN,
+and Lin et~al.~\cite{lin2024adsnet} fuse the two modalities in a dual-branch network with attention, reporting a gain
+over single-modality inputs. These detectors localise craters (centre and radius) and are trained end to end and
+evaluated against catalogues over large areas. Our task is different by design: frozen foundation-model backbones,
+a classification of 1.6\,km sub-tiles of a 100\,m grid (crater centre with $1 \le D < 8$\,km or not) instead of a localisation, and a
+second stage whose training set is limited to at most 2{,}000 samples by the cost of the kernel. We do not compete
+with these detectors; we take their observation that optical and elevation data are complementary as the setting of
+a controlled comparison between quantum and classical kernels on identical inputs.
+
+% --- Part 2: Discussion, limits (2-3 sentences) ---
+\paragraph{Scope}
+This study is a controlled testbed, not a competitive detector: one equatorial region (30$^\circ$S--30$^\circ$N,
+0--90$^\circ$E), frozen backbones, proxy pre-processing, sub-tile labels from a single catalogue and small stage-2
+samples. Its figures of merit are therefore not comparable with those of the detectors above, which differ in task,
+metric, catalogue, region and resolution; what the study measures is the relative behaviour of quantum and classical
+kernels under the same conditions.
