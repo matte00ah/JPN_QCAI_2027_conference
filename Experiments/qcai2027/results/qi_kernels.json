@@ -23101,5 +23101,3429 @@
    }
   },
   "note": "per representation (each with its own stage 1, QK samples and 2,000 test candidates) and map: the chosen configuration of the spatial CV (QI4.2) on its own sample at the best d of QI4.3, refitted, [mean, std] over the seeds; F-X = the QI4.3 runs; metrics as QI4.4 (Platt probability >= default_threshold; e2e = stage-1 recall x stage-2 recall, stage-2 precision; stage 1 alone at the e2e recall); runs in results/qi6_runs.csv, test scores in <output>/stage2/qi6_<variant>_test_scores.npz"
+ },
+ "QI7.1": {
+  "_meta": {
+   "step": "QI7.1",
+   "script": "qc_regression.py",
+   "command": "summary",
+   "time": "2026-11-27T11:53:59",
+   "config_md5": "a9e3629dde76d003fd52beaa5f2a82bb"
+  },
+  "variant": "F-X",
+  "targets": [
+   "dx",
+   "dy",
+   "log_r"
+  ],
+  "methods": [
+   "QK-A",
+   "QK-Z",
+   "QK-P",
+   "RBF",
+   "trivial"
+  ],
+  "svr_grid": {
+   "C": [
+    0.1,
+    1.0,
+    10.0,
+    100.0
+   ],
+   "epsilon_std_units": [
+    0.05,
+    0.1,
+    0.2,
+    0.5
+   ]
+  },
+  "cell_km_north_south": 1.6,
+  "units": {
+   "d4_n500": {
+    "seeds": 5,
+    "test_craters": 331,
+    "train_craters": 250,
+    "QK-A": {
+     "centre_err_km_mean": [
+      0.5937,
+      0.0035
+     ],
+     "centre_err_km_median": [
+      0.6201,
+      0.0102
+     ],
+     "radius_rel_err_mean": [
+      0.238,
+      0.0094
+     ],
+     "radius_rel_err_median": [
+      0.1895,
+      0.0073
+     ],
+     "dx_r2": [
+      -0.0271,
+      0.0295
+     ],
+     "dy_r2": [
+      0.0018,
+      0.0043
+     ],
+     "log_r_r2": [
+      0.5043,
+      0.0212
+     ],
+     "centre_err_km_band0": [
+      0.5957,
+      0.003
+     ],
+     "centre_err_km_band1": [
+      0.5964,
+      0.0074
+     ],
+     "centre_err_km_band2": [
+      0.5572,
+      0.0081
+     ],
+     "radius_rel_err_band0": [
+      0.2317,
+      0.0173
+     ],
+     "radius_rel_err_band1": [
+      0.2206,
+      0.0144
+     ],
+     "radius_rel_err_band2": [
+      0.3902,
+      0.0397
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "100.0/0.05"
+     }
+    },
+    "QK-Z": {
+     "centre_err_km_mean": [
+      0.5948,
+      0.0057
+     ],
+     "centre_err_km_median": [
+      0.6227,
+      0.0116
+     ],
+     "radius_rel_err_mean": [
+      0.2329,
+      0.0058
+     ],
+     "radius_rel_err_median": [
+      0.1884,
+      0.011
+     ],
+     "dx_r2": [
+      -0.037,
+      0.0471
+     ],
+     "dy_r2": [
+      0.0023,
+      0.0041
+     ],
+     "log_r_r2": [
+      0.5124,
+      0.0265
+     ],
+     "centre_err_km_band0": [
+      0.5962,
+      0.0041
+     ],
+     "centre_err_km_band1": [
+      0.5984,
+      0.0099
+     ],
+     "centre_err_km_band2": [
+      0.563,
+      0.0199
+     ],
+     "radius_rel_err_band0": [
+      0.2218,
+      0.0066
+     ],
+     "radius_rel_err_band1": [
+      0.2285,
+      0.0085
+     ],
+     "radius_rel_err_band2": [
+      0.3864,
+      0.0446
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "100.0/0.2"
+     }
+    },
+    "QK-P": {
+     "centre_err_km_mean": [
+      0.595,
+      0.0078
+     ],
+     "centre_err_km_median": [
+      0.6214,
+      0.0126
+     ],
+     "radius_rel_err_mean": [
+      0.2321,
+      0.0078
+     ],
+     "radius_rel_err_median": [
+      0.1854,
+      0.0139
+     ],
+     "dx_r2": [
+      -0.0359,
+      0.0566
+     ],
+     "dy_r2": [
+      -0.0023,
+      0.0102
+     ],
+     "log_r_r2": [
+      0.5183,
+      0.027
+     ],
+     "centre_err_km_band0": [
+      0.596,
+      0.0062
+     ],
+     "centre_err_km_band1": [
+      0.5998,
+      0.0116
+     ],
+     "centre_err_km_band2": [
+      0.5614,
+      0.0164
+     ],
+     "radius_rel_err_band0": [
+      0.221,
+      0.0089
+     ],
+     "radius_rel_err_band1": [
+      0.231,
+      0.0077
+     ],
+     "radius_rel_err_band2": [
+      0.3711,
+      0.0342
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.2",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "RBF": {
+     "centre_err_km_mean": [
+      0.5948,
+      0.0058
+     ],
+     "centre_err_km_median": [
+      0.6231,
+      0.0139
+     ],
+     "radius_rel_err_mean": [
+      0.2294,
+      0.0074
+     ],
+     "radius_rel_err_median": [
+      0.1831,
+      0.011
+     ],
+     "dx_r2": [
+      -0.0368,
+      0.0428
+     ],
+     "dy_r2": [
+      0.001,
+      0.0076
+     ],
+     "log_r_r2": [
+      0.5226,
+      0.0253
+     ],
+     "centre_err_km_band0": [
+      0.596,
+      0.0045
+     ],
+     "centre_err_km_band1": [
+      0.5996,
+      0.0108
+     ],
+     "centre_err_km_band2": [
+      0.5589,
+      0.0148
+     ],
+     "radius_rel_err_band0": [
+      0.2186,
+      0.0081
+     ],
+     "radius_rel_err_band1": [
+      0.2277,
+      0.0056
+     ],
+     "radius_rel_err_band2": [
+      0.3669,
+      0.0421
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "trivial": {
+     "centre_err_km_mean": [
+      0.5916,
+      0.0
+     ],
+     "centre_err_km_median": [
+      0.6204,
+      0.0
+     ],
+     "radius_rel_err_mean": [
+      0.3122,
+      0.0079
+     ],
+     "radius_rel_err_median": [
+      0.2994,
+      0.0059
+     ],
+     "dx_r2": [
+      -0.001,
+      0.0
+     ],
+     "dy_r2": [
+      -0.0016,
+      0.0
+     ],
+     "log_r_r2": [
+      -0.0228,
+      0.0113
+     ],
+     "centre_err_km_band0": [
+      0.5947,
+      0.0
+     ],
+     "centre_err_km_band1": [
+      0.5908,
+      0.0
+     ],
+     "centre_err_km_band2": [
+      0.557,
+      0.0
+     ],
+     "radius_rel_err_band0": [
+      0.2579,
+      0.0158
+     ],
+     "radius_rel_err_band1": [
+      0.3745,
+      0.011
+     ],
+     "radius_rel_err_band2": [
+      0.695,
+      0.0054
+     ]
+    },
+    "QK-A_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0011,
+      "std": 0.0025,
+      "seeds_quantum_better": 4
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0086,
+      "std": 0.0106,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": 0.0097,
+      "std": 0.0135,
+      "seeds_quantum_better": 4
+     },
+     "dy_r2": {
+      "mean": 0.0008,
+      "std": 0.0047,
+      "seeds_quantum_better": 2
+     },
+     "log_r_r2": {
+      "mean": -0.0184,
+      "std": 0.0209,
+      "seeds_quantum_better": 1
+     }
+    },
+    "QK-Z_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": 0.0001,
+      "std": 0.0008,
+      "seeds_quantum_better": 3
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0035,
+      "std": 0.0048,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": -0.0002,
+      "std": 0.0069,
+      "seeds_quantum_better": 3
+     },
+     "dy_r2": {
+      "mean": 0.0012,
+      "std": 0.0041,
+      "seeds_quantum_better": 3
+     },
+     "log_r_r2": {
+      "mean": -0.0103,
+      "std": 0.0089,
+      "seeds_quantum_better": 1
+     }
+    },
+    "QK-P_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": 0.0002,
+      "std": 0.0032,
+      "seeds_quantum_better": 1
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0027,
+      "std": 0.0024,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": 0.0009,
+      "std": 0.0241,
+      "seeds_quantum_better": 1
+     },
+     "dy_r2": {
+      "mean": -0.0034,
+      "std": 0.0036,
+      "seeds_quantum_better": 0
+     },
+     "log_r_r2": {
+      "mean": -0.0043,
+      "std": 0.0082,
+      "seeds_quantum_better": 2
+     }
+    }
+   },
+   "d8_n500": {
+    "seeds": 5,
+    "test_craters": 331,
+    "train_craters": 250,
+    "QK-A": {
+     "centre_err_km_mean": [
+      0.5942,
+      0.0061
+     ],
+     "centre_err_km_median": [
+      0.619,
+      0.0106
+     ],
+     "radius_rel_err_mean": [
+      0.2432,
+      0.0096
+     ],
+     "radius_rel_err_median": [
+      0.1845,
+      0.0061
+     ],
+     "dx_r2": [
+      -0.0352,
+      0.055
+     ],
+     "dy_r2": [
+      0.0014,
+      0.0066
+     ],
+     "log_r_r2": [
+      0.5131,
+      0.0235
+     ],
+     "centre_err_km_band0": [
+      0.5966,
+      0.006
+     ],
+     "centre_err_km_band1": [
+      0.5971,
+      0.006
+     ],
+     "centre_err_km_band2": [
+      0.5533,
+      0.0176
+     ],
+     "radius_rel_err_band0": [
+      0.2481,
+      0.0147
+     ],
+     "radius_rel_err_band1": [
+      0.1998,
+      0.0107
+     ],
+     "radius_rel_err_band2": [
+      0.3737,
+      0.0281
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.5",
+      "log_r": "10.0/0.05"
+     }
+    },
+    "QK-Z": {
+     "centre_err_km_mean": [
+      0.5939,
+      0.0062
+     ],
+     "centre_err_km_median": [
+      0.6211,
+      0.0109
+     ],
+     "radius_rel_err_mean": [
+      0.2406,
+      0.0102
+     ],
+     "radius_rel_err_median": [
+      0.1827,
+      0.0065
+     ],
+     "dx_r2": [
+      -0.0395,
+      0.0525
+     ],
+     "dy_r2": [
+      0.0062,
+      0.0105
+     ],
+     "log_r_r2": [
+      0.5146,
+      0.0205
+     ],
+     "centre_err_km_band0": [
+      0.5963,
+      0.006
+     ],
+     "centre_err_km_band1": [
+      0.597,
+      0.0057
+     ],
+     "centre_err_km_band2": [
+      0.5526,
+      0.0197
+     ],
+     "radius_rel_err_band0": [
+      0.2421,
+      0.0164
+     ],
+     "radius_rel_err_band1": [
+      0.2052,
+      0.0112
+     ],
+     "radius_rel_err_band2": [
+      0.3761,
+      0.0353
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.5",
+      "log_r": "1.0/0.2"
+     }
+    },
+    "QK-P": {
+     "centre_err_km_mean": [
+      0.5941,
+      0.0068
+     ],
+     "centre_err_km_median": [
+      0.6185,
+      0.0103
+     ],
+     "radius_rel_err_mean": [
+      0.2354,
+      0.0132
+     ],
+     "radius_rel_err_median": [
+      0.1793,
+      0.009
+     ],
+     "dx_r2": [
+      -0.0392,
+      0.059
+     ],
+     "dy_r2": [
+      0.0024,
+      0.0079
+     ],
+     "log_r_r2": [
+      0.5281,
+      0.0222
+     ],
+     "centre_err_km_band0": [
+      0.597,
+      0.0085
+     ],
+     "centre_err_km_band1": [
+      0.5963,
+      0.0041
+     ],
+     "centre_err_km_band2": [
+      0.5492,
+      0.0126
+     ],
+     "radius_rel_err_band0": [
+      0.2339,
+      0.024
+     ],
+     "radius_rel_err_band1": [
+      0.2093,
+      0.013
+     ],
+     "radius_rel_err_band2": [
+      0.3662,
+      0.0419
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "1.0/0.1"
+     }
+    },
+    "RBF": {
+     "centre_err_km_mean": [
+      0.5947,
+      0.0068
+     ],
+     "centre_err_km_median": [
+      0.6199,
+      0.0115
+     ],
+     "radius_rel_err_mean": [
+      0.2423,
+      0.0174
+     ],
+     "radius_rel_err_median": [
+      0.1821,
+      0.0099
+     ],
+     "dx_r2": [
+      -0.0413,
+      0.0589
+     ],
+     "dy_r2": [
+      -0.0012,
+      0.0132
+     ],
+     "log_r_r2": [
+      0.5157,
+      0.0292
+     ],
+     "centre_err_km_band0": [
+      0.5973,
+      0.0085
+     ],
+     "centre_err_km_band1": [
+      0.5983,
+      0.0028
+     ],
+     "centre_err_km_band2": [
+      0.5479,
+      0.0135
+     ],
+     "radius_rel_err_band0": [
+      0.2438,
+      0.0265
+     ],
+     "radius_rel_err_band1": [
+      0.208,
+      0.0103
+     ],
+     "radius_rel_err_band2": [
+      0.3749,
+      0.0406
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.5",
+      "log_r": "1.0/0.05"
+     }
+    },
+    "trivial": {
+     "centre_err_km_mean": [
+      0.5916,
+      0.0
+     ],
+     "centre_err_km_median": [
+      0.6204,
+      0.0
+     ],
+     "radius_rel_err_mean": [
+      0.3122,
+      0.0079
+     ],
+     "radius_rel_err_median": [
+      0.2994,
+      0.0059
+     ],
+     "dx_r2": [
+      -0.001,
+      0.0
+     ],
+     "dy_r2": [
+      -0.0016,
+      0.0
+     ],
+     "log_r_r2": [
+      -0.0228,
+      0.0113
+     ],
+     "centre_err_km_band0": [
+      0.5947,
+      0.0
+     ],
+     "centre_err_km_band1": [
+      0.5908,
+      0.0
+     ],
+     "centre_err_km_band2": [
+      0.557,
+      0.0
+     ],
+     "radius_rel_err_band0": [
+      0.2579,
+      0.0158
+     ],
+     "radius_rel_err_band1": [
+      0.3745,
+      0.011
+     ],
+     "radius_rel_err_band2": [
+      0.695,
+      0.0054
+     ]
+    },
+    "QK-A_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0005,
+      "std": 0.0013,
+      "seeds_quantum_better": 3
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0009,
+      "std": 0.0152,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": 0.0061,
+      "std": 0.0047,
+      "seeds_quantum_better": 5
+     },
+     "dy_r2": {
+      "mean": 0.0026,
+      "std": 0.0072,
+      "seeds_quantum_better": 3
+     },
+     "log_r_r2": {
+      "mean": -0.0026,
+      "std": 0.0253,
+      "seeds_quantum_better": 2
+     }
+    },
+    "QK-Z_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0008,
+      "std": 0.001,
+      "seeds_quantum_better": 3
+     },
+     "radius_rel_err_mean": {
+      "mean": -0.0018,
+      "std": 0.0105,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": 0.0018,
+      "std": 0.0093,
+      "seeds_quantum_better": 3
+     },
+     "dy_r2": {
+      "mean": 0.0074,
+      "std": 0.0097,
+      "seeds_quantum_better": 3
+     },
+     "log_r_r2": {
+      "mean": -0.0011,
+      "std": 0.0232,
+      "seeds_quantum_better": 2
+     }
+    },
+    "QK-P_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0006,
+      "std": 0.0013,
+      "seeds_quantum_better": 3
+     },
+     "radius_rel_err_mean": {
+      "mean": -0.007,
+      "std": 0.0138,
+      "seeds_quantum_better": 3
+     },
+     "dx_r2": {
+      "mean": 0.0022,
+      "std": 0.0025,
+      "seeds_quantum_better": 4
+     },
+     "dy_r2": {
+      "mean": 0.0036,
+      "std": 0.0072,
+      "seeds_quantum_better": 3
+     },
+     "log_r_r2": {
+      "mean": 0.0125,
+      "std": 0.0218,
+      "seeds_quantum_better": 4
+     }
+    }
+   },
+   "d12_n500": {
+    "seeds": 5,
+    "test_craters": 331,
+    "train_craters": 250,
+    "QK-A": {
+     "centre_err_km_mean": [
+      0.5958,
+      0.0073
+     ],
+     "centre_err_km_median": [
+      0.6225,
+      0.0134
+     ],
+     "radius_rel_err_mean": [
+      0.2431,
+      0.0113
+     ],
+     "radius_rel_err_median": [
+      0.1893,
+      0.0092
+     ],
+     "dx_r2": [
+      -0.048,
+      0.069
+     ],
+     "dy_r2": [
+      -0.0044,
+      0.0157
+     ],
+     "log_r_r2": [
+      0.532,
+      0.02
+     ],
+     "centre_err_km_band0": [
+      0.5986,
+      0.0076
+     ],
+     "centre_err_km_band1": [
+      0.6003,
+      0.0103
+     ],
+     "centre_err_km_band2": [
+      0.5414,
+      0.0151
+     ],
+     "radius_rel_err_band0": [
+      0.2469,
+      0.0177
+     ],
+     "radius_rel_err_band1": [
+      0.2105,
+      0.0099
+     ],
+     "radius_rel_err_band2": [
+      0.3399,
+      0.0156
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "1.0/0.05",
+      "log_r": "10.0/0.05"
+     }
+    },
+    "QK-Z": {
+     "centre_err_km_mean": [
+      0.5953,
+      0.0071
+     ],
+     "centre_err_km_median": [
+      0.6218,
+      0.0128
+     ],
+     "radius_rel_err_mean": [
+      0.2384,
+      0.0101
+     ],
+     "radius_rel_err_median": [
+      0.1874,
+      0.0105
+     ],
+     "dx_r2": [
+      -0.0451,
+      0.068
+     ],
+     "dy_r2": [
+      -0.0028,
+      0.0106
+     ],
+     "log_r_r2": [
+      0.544,
+      0.0201
+     ],
+     "centre_err_km_band0": [
+      0.5982,
+      0.0072
+     ],
+     "centre_err_km_band1": [
+      0.5995,
+      0.0112
+     ],
+     "centre_err_km_band2": [
+      0.5428,
+      0.014
+     ],
+     "radius_rel_err_band0": [
+      0.2394,
+      0.0141
+     ],
+     "radius_rel_err_band1": [
+      0.2139,
+      0.0043
+     ],
+     "radius_rel_err_band2": [
+      0.3327,
+      0.0165
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.05",
+      "dy": "1.0/0.05",
+      "log_r": "10.0/0.05"
+     }
+    },
+    "QK-P": {
+     "centre_err_km_mean": [
+      0.5961,
+      0.0088
+     ],
+     "centre_err_km_median": [
+      0.6177,
+      0.0068
+     ],
+     "radius_rel_err_mean": [
+      0.2383,
+      0.0078
+     ],
+     "radius_rel_err_median": [
+      0.1834,
+      0.013
+     ],
+     "dx_r2": [
+      -0.0456,
+      0.0667
+     ],
+     "dy_r2": [
+      -0.0089,
+      0.021
+     ],
+     "log_r_r2": [
+      0.5467,
+      0.0192
+     ],
+     "centre_err_km_band0": [
+      0.5997,
+      0.009
+     ],
+     "centre_err_km_band1": [
+      0.5991,
+      0.0119
+     ],
+     "centre_err_km_band2": [
+      0.5395,
+      0.0083
+     ],
+     "radius_rel_err_band0": [
+      0.2392,
+      0.0092
+     ],
+     "radius_rel_err_band1": [
+      0.2123,
+      0.0081
+     ],
+     "radius_rel_err_band2": [
+      0.3416,
+      0.0084
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "RBF": {
+     "centre_err_km_mean": [
+      0.5965,
+      0.0088
+     ],
+     "centre_err_km_median": [
+      0.6172,
+      0.0087
+     ],
+     "radius_rel_err_mean": [
+      0.2408,
+      0.0099
+     ],
+     "radius_rel_err_median": [
+      0.186,
+      0.0106
+     ],
+     "dx_r2": [
+      -0.0463,
+      0.0676
+     ],
+     "dy_r2": [
+      -0.0109,
+      0.0212
+     ],
+     "log_r_r2": [
+      0.5417,
+      0.0221
+     ],
+     "centre_err_km_band0": [
+      0.6002,
+      0.0091
+     ],
+     "centre_err_km_band1": [
+      0.5995,
+      0.0117
+     ],
+     "centre_err_km_band2": [
+      0.5396,
+      0.0082
+     ],
+     "radius_rel_err_band0": [
+      0.2431,
+      0.0138
+     ],
+     "radius_rel_err_band1": [
+      0.2112,
+      0.0086
+     ],
+     "radius_rel_err_band2": [
+      0.3412,
+      0.0096
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "trivial": {
+     "centre_err_km_mean": [
+      0.5916,
+      0.0
+     ],
+     "centre_err_km_median": [
+      0.6204,
+      0.0
+     ],
+     "radius_rel_err_mean": [
+      0.3122,
+      0.0079
+     ],
+     "radius_rel_err_median": [
+      0.2994,
+      0.0059
+     ],
+     "dx_r2": [
+      -0.001,
+      0.0
+     ],
+     "dy_r2": [
+      -0.0016,
+      0.0
+     ],
+     "log_r_r2": [
+      -0.0228,
+      0.0113
+     ],
+     "centre_err_km_band0": [
+      0.5947,
+      0.0
+     ],
+     "centre_err_km_band1": [
+      0.5908,
+      0.0
+     ],
+     "centre_err_km_band2": [
+      0.557,
+      0.0
+     ],
+     "radius_rel_err_band0": [
+      0.2579,
+      0.0158
+     ],
+     "radius_rel_err_band1": [
+      0.3745,
+      0.011
+     ],
+     "radius_rel_err_band2": [
+      0.695,
+      0.0054
+     ]
+    },
+    "QK-A_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0007,
+      "std": 0.0021,
+      "seeds_quantum_better": 3
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0024,
+      "std": 0.004,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": -0.0017,
+      "std": 0.0093,
+      "seeds_quantum_better": 1
+     },
+     "dy_r2": {
+      "mean": 0.0065,
+      "std": 0.0257,
+      "seeds_quantum_better": 2
+     },
+     "log_r_r2": {
+      "mean": -0.0097,
+      "std": 0.013,
+      "seeds_quantum_better": 2
+     }
+    },
+    "QK-Z_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0012,
+      "std": 0.0018,
+      "seeds_quantum_better": 4
+     },
+     "radius_rel_err_mean": {
+      "mean": -0.0024,
+      "std": 0.0086,
+      "seeds_quantum_better": 3
+     },
+     "dx_r2": {
+      "mean": 0.0012,
+      "std": 0.0069,
+      "seeds_quantum_better": 2
+     },
+     "dy_r2": {
+      "mean": 0.0081,
+      "std": 0.0245,
+      "seeds_quantum_better": 2
+     },
+     "log_r_r2": {
+      "mean": 0.0023,
+      "std": 0.0191,
+      "seeds_quantum_better": 2
+     }
+    },
+    "QK-P_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0004,
+      "std": 0.0007,
+      "seeds_quantum_better": 2
+     },
+     "radius_rel_err_mean": {
+      "mean": -0.0024,
+      "std": 0.0032,
+      "seeds_quantum_better": 5
+     },
+     "dx_r2": {
+      "mean": 0.0007,
+      "std": 0.001,
+      "seeds_quantum_better": 4
+     },
+     "dy_r2": {
+      "mean": 0.002,
+      "std": 0.0045,
+      "seeds_quantum_better": 2
+     },
+     "log_r_r2": {
+      "mean": 0.0051,
+      "std": 0.0047,
+      "seeds_quantum_better": 5
+     }
+    }
+   },
+   "d16_n100": {
+    "seeds": 5,
+    "test_craters": 331,
+    "train_craters": 50,
+    "QK-A": {
+     "centre_err_km_mean": [
+      0.5983,
+      0.0065
+     ],
+     "centre_err_km_median": [
+      0.6252,
+      0.0025
+     ],
+     "radius_rel_err_mean": [
+      0.2824,
+      0.0339
+     ],
+     "radius_rel_err_median": [
+      0.2308,
+      0.0214
+     ],
+     "dx_r2": [
+      -0.0411,
+      0.0404
+     ],
+     "dy_r2": [
+      -0.0307,
+      0.0269
+     ],
+     "log_r_r2": [
+      0.405,
+      0.0786
+     ],
+     "centre_err_km_band0": [
+      0.6064,
+      0.0111
+     ],
+     "centre_err_km_band1": [
+      0.5847,
+      0.0086
+     ],
+     "centre_err_km_band2": [
+      0.5588,
+      0.0125
+     ],
+     "radius_rel_err_band0": [
+      0.2947,
+      0.0549
+     ],
+     "radius_rel_err_band1": [
+      0.2307,
+      0.0283
+     ],
+     "radius_rel_err_band2": [
+      0.3589,
+      0.0296
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.05",
+      "dy": "0.1/0.5",
+      "log_r": "100.0/0.05"
+     }
+    },
+    "QK-Z": {
+     "centre_err_km_mean": [
+      0.5989,
+      0.0075
+     ],
+     "centre_err_km_median": [
+      0.6261,
+      0.0058
+     ],
+     "radius_rel_err_mean": [
+      0.3012,
+      0.046
+     ],
+     "radius_rel_err_median": [
+      0.2445,
+      0.0238
+     ],
+     "dx_r2": [
+      -0.0483,
+      0.0415
+     ],
+     "dy_r2": [
+      -0.0318,
+      0.0312
+     ],
+     "log_r_r2": [
+      0.3665,
+      0.1161
+     ],
+     "centre_err_km_band0": [
+      0.6071,
+      0.0114
+     ],
+     "centre_err_km_band1": [
+      0.5856,
+      0.0092
+     ],
+     "centre_err_km_band2": [
+      0.5588,
+      0.016
+     ],
+     "radius_rel_err_band0": [
+      0.3189,
+      0.0736
+     ],
+     "radius_rel_err_band1": [
+      0.233,
+      0.0223
+     ],
+     "radius_rel_err_band2": [
+      0.386,
+      0.0637
+     ],
+     "chosen_C_epsilon": {
+      "dx": "1.0/0.05",
+      "dy": "0.1/0.5",
+      "log_r": "10.0/0.1"
+     }
+    },
+    "QK-P": {
+     "centre_err_km_mean": [
+      0.6012,
+      0.0054
+     ],
+     "centre_err_km_median": [
+      0.6232,
+      0.0084
+     ],
+     "radius_rel_err_mean": [
+      0.3066,
+      0.0308
+     ],
+     "radius_rel_err_median": [
+      0.2555,
+      0.034
+     ],
+     "dx_r2": [
+      -0.0424,
+      0.0372
+     ],
+     "dy_r2": [
+      -0.0564,
+      0.0448
+     ],
+     "log_r_r2": [
+      0.2941,
+      0.174
+     ],
+     "centre_err_km_band0": [
+      0.6082,
+      0.0092
+     ],
+     "centre_err_km_band1": [
+      0.5893,
+      0.0149
+     ],
+     "centre_err_km_band2": [
+      0.5694,
+      0.0205
+     ],
+     "radius_rel_err_band0": [
+      0.3164,
+      0.0445
+     ],
+     "radius_rel_err_band1": [
+      0.2564,
+      0.0465
+     ],
+     "radius_rel_err_band2": [
+      0.4082,
+      0.1398
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.1",
+      "dy": "0.1/0.5",
+      "log_r": "10.0/0.05"
+     }
+    },
+    "RBF": {
+     "centre_err_km_mean": [
+      0.6004,
+      0.0054
+     ],
+     "centre_err_km_median": [
+      0.6218,
+      0.0105
+     ],
+     "radius_rel_err_mean": [
+      0.3003,
+      0.0713
+     ],
+     "radius_rel_err_median": [
+      0.2436,
+      0.0436
+     ],
+     "dx_r2": [
+      -0.0455,
+      0.0382
+     ],
+     "dy_r2": [
+      -0.0526,
+      0.0353
+     ],
+     "log_r_r2": [
+      0.348,
+      0.1887
+     ],
+     "centre_err_km_band0": [
+      0.6075,
+      0.0106
+     ],
+     "centre_err_km_band1": [
+      0.5892,
+      0.0127
+     ],
+     "centre_err_km_band2": [
+      0.5649,
+      0.0169
+     ],
+     "radius_rel_err_band0": [
+      0.3154,
+      0.1043
+     ],
+     "radius_rel_err_band1": [
+      0.2386,
+      0.025
+     ],
+     "radius_rel_err_band2": [
+      0.3874,
+      0.0712
+     ],
+     "chosen_C_epsilon": {
+      "dx": "1.0/0.1",
+      "dy": "0.1/0.5",
+      "log_r": "10.0/0.05"
+     }
+    },
+    "trivial": {
+     "centre_err_km_mean": [
+      0.5916,
+      0.0
+     ],
+     "centre_err_km_median": [
+      0.6204,
+      0.0
+     ],
+     "radius_rel_err_mean": [
+      0.3208,
+      0.0145
+     ],
+     "radius_rel_err_median": [
+      0.3098,
+      0.012
+     ],
+     "dx_r2": [
+      -0.001,
+      0.0
+     ],
+     "dy_r2": [
+      -0.0016,
+      0.0
+     ],
+     "log_r_r2": [
+      -0.0162,
+      0.0163
+     ],
+     "centre_err_km_band0": [
+      0.5947,
+      0.0
+     ],
+     "centre_err_km_band1": [
+      0.5908,
+      0.0
+     ],
+     "centre_err_km_band2": [
+      0.557,
+      0.0
+     ],
+     "radius_rel_err_band0": [
+      0.2748,
+      0.0288
+     ],
+     "radius_rel_err_band1": [
+      0.3633,
+      0.0196
+     ],
+     "radius_rel_err_band2": [
+      0.6895,
+      0.0095
+     ]
+    },
+    "QK-A_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0022,
+      "std": 0.0037,
+      "seeds_quantum_better": 4
+     },
+     "radius_rel_err_mean": {
+      "mean": -0.0179,
+      "std": 0.0387,
+      "seeds_quantum_better": 3
+     },
+     "dx_r2": {
+      "mean": 0.0044,
+      "std": 0.005,
+      "seeds_quantum_better": 5
+     },
+     "dy_r2": {
+      "mean": 0.0219,
+      "std": 0.0421,
+      "seeds_quantum_better": 4
+     },
+     "log_r_r2": {
+      "mean": 0.057,
+      "std": 0.1178,
+      "seeds_quantum_better": 3
+     }
+    },
+    "QK-Z_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0015,
+      "std": 0.0046,
+      "seeds_quantum_better": 2
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0009,
+      "std": 0.0294,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": -0.0029,
+      "std": 0.006,
+      "seeds_quantum_better": 1
+     },
+     "dy_r2": {
+      "mean": 0.0208,
+      "std": 0.044,
+      "seeds_quantum_better": 2
+     },
+     "log_r_r2": {
+      "mean": 0.0185,
+      "std": 0.0732,
+      "seeds_quantum_better": 1
+     }
+    },
+    "QK-P_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": 0.0008,
+      "std": 0.0023,
+      "seeds_quantum_better": 3
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0064,
+      "std": 0.0599,
+      "seeds_quantum_better": 2
+     },
+     "dx_r2": {
+      "mean": 0.0031,
+      "std": 0.0094,
+      "seeds_quantum_better": 4
+     },
+     "dy_r2": {
+      "mean": -0.0038,
+      "std": 0.0127,
+      "seeds_quantum_better": 4
+     },
+     "log_r_r2": {
+      "mean": -0.0539,
+      "std": 0.2484,
+      "seeds_quantum_better": 2
+     }
+    }
+   },
+   "d16_n250": {
+    "seeds": 5,
+    "test_craters": 331,
+    "train_craters": 125,
+    "QK-A": {
+     "centre_err_km_mean": [
+      0.5948,
+      0.0033
+     ],
+     "centre_err_km_median": [
+      0.6196,
+      0.0093
+     ],
+     "radius_rel_err_mean": [
+      0.2578,
+      0.016
+     ],
+     "radius_rel_err_median": [
+      0.2094,
+      0.009
+     ],
+     "dx_r2": [
+      -0.0091,
+      0.0128
+     ],
+     "dy_r2": [
+      -0.029,
+      0.0404
+     ],
+     "log_r_r2": [
+      0.4627,
+      0.0281
+     ],
+     "centre_err_km_band0": [
+      0.5986,
+      0.0045
+     ],
+     "centre_err_km_band1": [
+      0.5905,
+      0.0063
+     ],
+     "centre_err_km_band2": [
+      0.5677,
+      0.0263
+     ],
+     "radius_rel_err_band0": [
+      0.2536,
+      0.0321
+     ],
+     "radius_rel_err_band1": [
+      0.2363,
+      0.0198
+     ],
+     "radius_rel_err_band2": [
+      0.4013,
+      0.0655
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "1.0/0.05"
+     }
+    },
+    "QK-Z": {
+     "centre_err_km_mean": [
+      0.5947,
+      0.0031
+     ],
+     "centre_err_km_median": [
+      0.6222,
+      0.0075
+     ],
+     "radius_rel_err_mean": [
+      0.2529,
+      0.0137
+     ],
+     "radius_rel_err_median": [
+      0.2049,
+      0.0102
+     ],
+     "dx_r2": [
+      -0.0128,
+      0.0128
+     ],
+     "dy_r2": [
+      -0.0266,
+      0.0375
+     ],
+     "log_r_r2": [
+      0.4828,
+      0.0281
+     ],
+     "centre_err_km_band0": [
+      0.5989,
+      0.0048
+     ],
+     "centre_err_km_band1": [
+      0.5898,
+      0.0077
+     ],
+     "centre_err_km_band2": [
+      0.5661,
+      0.0238
+     ],
+     "radius_rel_err_band0": [
+      0.2473,
+      0.0254
+     ],
+     "radius_rel_err_band1": [
+      0.238,
+      0.0174
+     ],
+     "radius_rel_err_band2": [
+      0.3863,
+      0.0651
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.05",
+      "dy": "0.1/0.05",
+      "log_r": "1.0/0.05"
+     }
+    },
+    "QK-P": {
+     "centre_err_km_mean": [
+      0.607,
+      0.0245
+     ],
+     "centre_err_km_median": [
+      0.6248,
+      0.0122
+     ],
+     "radius_rel_err_mean": [
+      0.2582,
+      0.019
+     ],
+     "radius_rel_err_median": [
+      0.2096,
+      0.0131
+     ],
+     "dx_r2": [
+      -0.1346,
+      0.2378
+     ],
+     "dy_r2": [
+      -0.0224,
+      0.041
+     ],
+     "log_r_r2": [
+      0.4853,
+      0.0277
+     ],
+     "centre_err_km_band0": [
+      0.6111,
+      0.027
+     ],
+     "centre_err_km_band1": [
+      0.6023,
+      0.022
+     ],
+     "centre_err_km_band2": [
+      0.5776,
+      0.0201
+     ],
+     "radius_rel_err_band0": [
+      0.2602,
+      0.0339
+     ],
+     "radius_rel_err_band1": [
+      0.2288,
+      0.0158
+     ],
+     "radius_rel_err_band2": [
+      0.3621,
+      0.0633
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.05",
+      "dy": "0.1/0.5",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "RBF": {
+     "centre_err_km_mean": [
+      0.6064,
+      0.0239
+     ],
+     "centre_err_km_median": [
+      0.6229,
+      0.0107
+     ],
+     "radius_rel_err_mean": [
+      0.2537,
+      0.0159
+     ],
+     "radius_rel_err_median": [
+      0.2044,
+      0.0113
+     ],
+     "dx_r2": [
+      -0.1218,
+      0.2149
+     ],
+     "dy_r2": [
+      -0.0324,
+      0.0433
+     ],
+     "log_r_r2": [
+      0.4873,
+      0.021
+     ],
+     "centre_err_km_band0": [
+      0.611,
+      0.0277
+     ],
+     "centre_err_km_band1": [
+      0.6002,
+      0.0177
+     ],
+     "centre_err_km_band2": [
+      0.5777,
+      0.02
+     ],
+     "radius_rel_err_band0": [
+      0.2513,
+      0.0282
+     ],
+     "radius_rel_err_band1": [
+      0.2345,
+      0.0146
+     ],
+     "radius_rel_err_band2": [
+      0.3659,
+      0.0578
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.05",
+      "dy": "0.1/0.5",
+      "log_r": "1.0/0.05"
+     }
+    },
+    "trivial": {
+     "centre_err_km_mean": [
+      0.5916,
+      0.0
+     ],
+     "centre_err_km_median": [
+      0.6204,
+      0.0
+     ],
+     "radius_rel_err_mean": [
+      0.3091,
+      0.0057
+     ],
+     "radius_rel_err_median": [
+      0.2969,
+      0.0007
+     ],
+     "dx_r2": [
+      -0.001,
+      0.0
+     ],
+     "dy_r2": [
+      -0.0016,
+      0.0
+     ],
+     "log_r_r2": [
+      -0.027,
+      0.0108
+     ],
+     "centre_err_km_band0": [
+      0.5947,
+      0.0
+     ],
+     "centre_err_km_band1": [
+      0.5908,
+      0.0
+     ],
+     "centre_err_km_band2": [
+      0.557,
+      0.0
+     ],
+     "radius_rel_err_band0": [
+      0.2515,
+      0.0116
+     ],
+     "radius_rel_err_band1": [
+      0.3789,
+      0.0084
+     ],
+     "radius_rel_err_band2": [
+      0.6971,
+      0.0041
+     ]
+    },
+    "QK-A_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0116,
+      "std": 0.0233,
+      "seeds_quantum_better": 3
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0041,
+      "std": 0.0092,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": 0.1127,
+      "std": 0.2168,
+      "seeds_quantum_better": 3
+     },
+     "dy_r2": {
+      "mean": 0.0034,
+      "std": 0.0086,
+      "seeds_quantum_better": 4
+     },
+     "log_r_r2": {
+      "mean": -0.0246,
+      "std": 0.0117,
+      "seeds_quantum_better": 0
+     }
+    },
+    "QK-Z_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0117,
+      "std": 0.0235,
+      "seeds_quantum_better": 2
+     },
+     "radius_rel_err_mean": {
+      "mean": -0.0007,
+      "std": 0.004,
+      "seeds_quantum_better": 3
+     },
+     "dx_r2": {
+      "mean": 0.109,
+      "std": 0.2142,
+      "seeds_quantum_better": 3
+     },
+     "dy_r2": {
+      "mean": 0.0058,
+      "std": 0.0084,
+      "seeds_quantum_better": 3
+     },
+     "log_r_r2": {
+      "mean": -0.0046,
+      "std": 0.0115,
+      "seeds_quantum_better": 2
+     }
+    },
+    "QK-P_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": 0.0006,
+      "std": 0.0007,
+      "seeds_quantum_better": 1
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0045,
+      "std": 0.0048,
+      "seeds_quantum_better": 2
+     },
+     "dx_r2": {
+      "mean": -0.0128,
+      "std": 0.0229,
+      "seeds_quantum_better": 2
+     },
+     "dy_r2": {
+      "mean": 0.0101,
+      "std": 0.0203,
+      "seeds_quantum_better": 1
+     },
+     "log_r_r2": {
+      "mean": -0.002,
+      "std": 0.0131,
+      "seeds_quantum_better": 3
+     }
+    }
+   },
+   "d16_n500": {
+    "seeds": 5,
+    "test_craters": 331,
+    "train_craters": 250,
+    "QK-A": {
+     "centre_err_km_mean": [
+      0.5925,
+      0.0028
+     ],
+     "centre_err_km_median": [
+      0.6188,
+      0.0064
+     ],
+     "radius_rel_err_mean": [
+      0.2474,
+      0.0075
+     ],
+     "radius_rel_err_median": [
+      0.1897,
+      0.0093
+     ],
+     "dx_r2": [
+      -0.0219,
+      0.027
+     ],
+     "dy_r2": [
+      -0.003,
+      0.012
+     ],
+     "log_r_r2": [
+      0.5176,
+      0.0206
+     ],
+     "centre_err_km_band0": [
+      0.5958,
+      0.0023
+     ],
+     "centre_err_km_band1": [
+      0.594,
+      0.0076
+     ],
+     "centre_err_km_band2": [
+      0.5459,
+      0.0081
+     ],
+     "radius_rel_err_band0": [
+      0.2504,
+      0.0163
+     ],
+     "radius_rel_err_band1": [
+      0.2149,
+      0.0139
+     ],
+     "radius_rel_err_band2": [
+      0.354,
+      0.0503
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.5",
+      "log_r": "1.0/0.1"
+     }
+    },
+    "QK-Z": {
+     "centre_err_km_mean": [
+      0.5921,
+      0.0031
+     ],
+     "centre_err_km_median": [
+      0.6183,
+      0.0072
+     ],
+     "radius_rel_err_mean": [
+      0.2467,
+      0.0076
+     ],
+     "radius_rel_err_median": [
+      0.193,
+      0.0069
+     ],
+     "dx_r2": [
+      -0.0214,
+      0.0261
+     ],
+     "dy_r2": [
+      -0.0017,
+      0.0147
+     ],
+     "log_r_r2": [
+      0.5184,
+      0.0174
+     ],
+     "centre_err_km_band0": [
+      0.5948,
+      0.0042
+     ],
+     "centre_err_km_band1": [
+      0.5959,
+      0.0095
+     ],
+     "centre_err_km_band2": [
+      0.5431,
+      0.0051
+     ],
+     "radius_rel_err_band0": [
+      0.2478,
+      0.016
+     ],
+     "radius_rel_err_band1": [
+      0.2189,
+      0.0144
+     ],
+     "radius_rel_err_band2": [
+      0.3559,
+      0.0449
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "1.0/0.5",
+      "log_r": "1.0/0.1"
+     }
+    },
+    "QK-P": {
+     "centre_err_km_mean": [
+      0.5922,
+      0.0047
+     ],
+     "centre_err_km_median": [
+      0.6187,
+      0.0059
+     ],
+     "radius_rel_err_mean": [
+      0.2461,
+      0.0121
+     ],
+     "radius_rel_err_median": [
+      0.1896,
+      0.0045
+     ],
+     "dx_r2": [
+      -0.0261,
+      0.0349
+     ],
+     "dy_r2": [
+      0.0028,
+      0.0104
+     ],
+     "log_r_r2": [
+      0.5226,
+      0.0223
+     ],
+     "centre_err_km_band0": [
+      0.5957,
+      0.0046
+     ],
+     "centre_err_km_band1": [
+      0.5944,
+      0.0087
+     ],
+     "centre_err_km_band2": [
+      0.541,
+      0.008
+     ],
+     "radius_rel_err_band0": [
+      0.2484,
+      0.0199
+     ],
+     "radius_rel_err_band1": [
+      0.2158,
+      0.0102
+     ],
+     "radius_rel_err_band2": [
+      0.3503,
+      0.0286
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.5",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "RBF": {
+     "centre_err_km_mean": [
+      0.5927,
+      0.0045
+     ],
+     "centre_err_km_median": [
+      0.6186,
+      0.0058
+     ],
+     "radius_rel_err_mean": [
+      0.2469,
+      0.0118
+     ],
+     "radius_rel_err_median": [
+      0.1913,
+      0.0081
+     ],
+     "dx_r2": [
+      -0.0278,
+      0.0356
+     ],
+     "dy_r2": [
+      -0.001,
+      0.0123
+     ],
+     "log_r_r2": [
+      0.5181,
+      0.0223
+     ],
+     "centre_err_km_band0": [
+      0.5961,
+      0.0046
+     ],
+     "centre_err_km_band1": [
+      0.5949,
+      0.0081
+     ],
+     "centre_err_km_band2": [
+      0.542,
+      0.0077
+     ],
+     "radius_rel_err_band0": [
+      0.2485,
+      0.0199
+     ],
+     "radius_rel_err_band1": [
+      0.2163,
+      0.0093
+     ],
+     "radius_rel_err_band2": [
+      0.361,
+      0.0325
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.5",
+      "log_r": "1.0/0.1"
+     }
+    },
+    "trivial": {
+     "centre_err_km_mean": [
+      0.5916,
+      0.0
+     ],
+     "centre_err_km_median": [
+      0.6204,
+      0.0
+     ],
+     "radius_rel_err_mean": [
+      0.3122,
+      0.0079
+     ],
+     "radius_rel_err_median": [
+      0.2994,
+      0.0059
+     ],
+     "dx_r2": [
+      -0.001,
+      0.0
+     ],
+     "dy_r2": [
+      -0.0016,
+      0.0
+     ],
+     "log_r_r2": [
+      -0.0228,
+      0.0113
+     ],
+     "centre_err_km_band0": [
+      0.5947,
+      0.0
+     ],
+     "centre_err_km_band1": [
+      0.5908,
+      0.0
+     ],
+     "centre_err_km_band2": [
+      0.557,
+      0.0
+     ],
+     "radius_rel_err_band0": [
+      0.2579,
+      0.0158
+     ],
+     "radius_rel_err_band1": [
+      0.3745,
+      0.011
+     ],
+     "radius_rel_err_band2": [
+      0.695,
+      0.0054
+     ]
+    },
+    "QK-A_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0002,
+      "std": 0.0018,
+      "seeds_quantum_better": 1
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0006,
+      "std": 0.0075,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": 0.0059,
+      "std": 0.0093,
+      "seeds_quantum_better": 4
+     },
+     "dy_r2": {
+      "mean": -0.002,
+      "std": 0.009,
+      "seeds_quantum_better": 1
+     },
+     "log_r_r2": {
+      "mean": -0.0005,
+      "std": 0.0128,
+      "seeds_quantum_better": 3
+     }
+    },
+    "QK-Z_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0006,
+      "std": 0.0019,
+      "seeds_quantum_better": 2
+     },
+     "radius_rel_err_mean": {
+      "mean": -0.0001,
+      "std": 0.01,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": 0.0064,
+      "std": 0.0102,
+      "seeds_quantum_better": 4
+     },
+     "dy_r2": {
+      "mean": -0.0007,
+      "std": 0.0091,
+      "seeds_quantum_better": 2
+     },
+     "log_r_r2": {
+      "mean": 0.0003,
+      "std": 0.0167,
+      "seeds_quantum_better": 2
+     }
+    },
+    "QK-P_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0005,
+      "std": 0.001,
+      "seeds_quantum_better": 1
+     },
+     "radius_rel_err_mean": {
+      "mean": -0.0008,
+      "std": 0.002,
+      "seeds_quantum_better": 3
+     },
+     "dx_r2": {
+      "mean": 0.0017,
+      "std": 0.0022,
+      "seeds_quantum_better": 4
+     },
+     "dy_r2": {
+      "mean": 0.0038,
+      "std": 0.0085,
+      "seeds_quantum_better": 3
+     },
+     "log_r_r2": {
+      "mean": 0.0045,
+      "std": 0.0085,
+      "seeds_quantum_better": 4
+     }
+    }
+   },
+   "d16_n1000": {
+    "seeds": 5,
+    "test_craters": 331,
+    "train_craters": 500,
+    "QK-A": {
+     "centre_err_km_mean": [
+      0.5904,
+      0.0021
+     ],
+     "centre_err_km_median": [
+      0.6204,
+      0.0074
+     ],
+     "radius_rel_err_mean": [
+      0.237,
+      0.0077
+     ],
+     "radius_rel_err_median": [
+      0.1771,
+      0.006
+     ],
+     "dx_r2": [
+      -0.0139,
+      0.0083
+     ],
+     "dy_r2": [
+      0.0077,
+      0.0097
+     ],
+     "log_r_r2": [
+      0.5504,
+      0.0233
+     ],
+     "centre_err_km_band0": [
+      0.5936,
+      0.0029
+     ],
+     "centre_err_km_band1": [
+      0.5913,
+      0.0036
+     ],
+     "centre_err_km_band2": [
+      0.5486,
+      0.0089
+     ],
+     "radius_rel_err_band0": [
+      0.2422,
+      0.0122
+     ],
+     "radius_rel_err_band1": [
+      0.2054,
+      0.0023
+     ],
+     "radius_rel_err_band2": [
+      0.3125,
+      0.0414
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.2",
+      "dy": "0.1/0.2",
+      "log_r": "1.0/0.05"
+     }
+    },
+    "QK-Z": {
+     "centre_err_km_mean": [
+      0.5898,
+      0.0021
+     ],
+     "centre_err_km_median": [
+      0.621,
+      0.0054
+     ],
+     "radius_rel_err_mean": [
+      0.2359,
+      0.0107
+     ],
+     "radius_rel_err_median": [
+      0.1726,
+      0.0059
+     ],
+     "dx_r2": [
+      -0.0147,
+      0.0062
+     ],
+     "dy_r2": [
+      0.0108,
+      0.0102
+     ],
+     "log_r_r2": [
+      0.549,
+      0.0275
+     ],
+     "centre_err_km_band0": [
+      0.593,
+      0.0035
+     ],
+     "centre_err_km_band1": [
+      0.5909,
+      0.0037
+     ],
+     "centre_err_km_band2": [
+      0.5463,
+      0.0067
+     ],
+     "radius_rel_err_band0": [
+      0.2408,
+      0.0157
+     ],
+     "radius_rel_err_band1": [
+      0.2064,
+      0.0043
+     ],
+     "radius_rel_err_band2": [
+      0.3042,
+      0.044
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.2",
+      "dy": "0.1/0.2",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "QK-P": {
+     "centre_err_km_mean": [
+      0.5902,
+      0.0019
+     ],
+     "centre_err_km_median": [
+      0.6202,
+      0.0052
+     ],
+     "radius_rel_err_mean": [
+      0.2328,
+      0.0076
+     ],
+     "radius_rel_err_median": [
+      0.1765,
+      0.0031
+     ],
+     "dx_r2": [
+      -0.0163,
+      0.011
+     ],
+     "dy_r2": [
+      0.0097,
+      0.0091
+     ],
+     "log_r_r2": [
+      0.5629,
+      0.0194
+     ],
+     "centre_err_km_band0": [
+      0.5933,
+      0.0037
+     ],
+     "centre_err_km_band1": [
+      0.5916,
+      0.004
+     ],
+     "centre_err_km_band2": [
+      0.5473,
+      0.0051
+     ],
+     "radius_rel_err_band0": [
+      0.2361,
+      0.0108
+     ],
+     "radius_rel_err_band1": [
+      0.2044,
+      0.0036
+     ],
+     "radius_rel_err_band2": [
+      0.3171,
+      0.0355
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.2",
+      "dy": "0.1/0.2",
+      "log_r": "1.0/0.2"
+     }
+    },
+    "RBF": {
+     "centre_err_km_mean": [
+      0.5895,
+      0.0024
+     ],
+     "centre_err_km_median": [
+      0.6196,
+      0.0064
+     ],
+     "radius_rel_err_mean": [
+      0.2337,
+      0.0055
+     ],
+     "radius_rel_err_median": [
+      0.174,
+      0.0075
+     ],
+     "dx_r2": [
+      -0.0132,
+      0.003
+     ],
+     "dy_r2": [
+      0.0101,
+      0.0119
+     ],
+     "log_r_r2": [
+      0.5568,
+      0.0155
+     ],
+     "centre_err_km_band0": [
+      0.5921,
+      0.0032
+     ],
+     "centre_err_km_band1": [
+      0.5922,
+      0.0039
+     ],
+     "centre_err_km_band2": [
+      0.5456,
+      0.0087
+     ],
+     "radius_rel_err_band0": [
+      0.236,
+      0.0077
+     ],
+     "radius_rel_err_band1": [
+      0.2062,
+      0.0037
+     ],
+     "radius_rel_err_band2": [
+      0.3271,
+      0.0309
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.2",
+      "dy": "0.1/0.2",
+      "log_r": "1.0/0.2"
+     }
+    },
+    "trivial": {
+     "centre_err_km_mean": [
+      0.5916,
+      0.0
+     ],
+     "centre_err_km_median": [
+      0.6204,
+      0.0
+     ],
+     "radius_rel_err_mean": [
+      0.3152,
+      0.0036
+     ],
+     "radius_rel_err_median": [
+      0.3004,
+      0.0062
+     ],
+     "dx_r2": [
+      -0.001,
+      0.0
+     ],
+     "dy_r2": [
+      -0.0016,
+      0.0
+     ],
+     "log_r_r2": [
+      -0.0172,
+      0.0042
+     ],
+     "centre_err_km_band0": [
+      0.5947,
+      0.0
+     ],
+     "centre_err_km_band1": [
+      0.5908,
+      0.0
+     ],
+     "centre_err_km_band2": [
+      0.557,
+      0.0
+     ],
+     "radius_rel_err_band0": [
+      0.2639,
+      0.0072
+     ],
+     "radius_rel_err_band1": [
+      0.3702,
+      0.0049
+     ],
+     "radius_rel_err_band2": [
+      0.6929,
+      0.0024
+     ]
+    },
+    "QK-A_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": 0.0009,
+      "std": 0.001,
+      "seeds_quantum_better": 2
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0032,
+      "std": 0.0033,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": -0.0007,
+      "std": 0.0079,
+      "seeds_quantum_better": 3
+     },
+     "dy_r2": {
+      "mean": -0.0024,
+      "std": 0.0062,
+      "seeds_quantum_better": 3
+     },
+     "log_r_r2": {
+      "mean": -0.0064,
+      "std": 0.011,
+      "seeds_quantum_better": 1
+     }
+    },
+    "QK-Z_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": 0.0004,
+      "std": 0.0009,
+      "seeds_quantum_better": 2
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0021,
+      "std": 0.0061,
+      "seeds_quantum_better": 3
+     },
+     "dx_r2": {
+      "mean": -0.0015,
+      "std": 0.0049,
+      "seeds_quantum_better": 3
+     },
+     "dy_r2": {
+      "mean": 0.0007,
+      "std": 0.0022,
+      "seeds_quantum_better": 3
+     },
+     "log_r_r2": {
+      "mean": -0.0077,
+      "std": 0.0125,
+      "seeds_quantum_better": 2
+     }
+    },
+    "QK-P_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": 0.0008,
+      "std": 0.0013,
+      "seeds_quantum_better": 2
+     },
+     "radius_rel_err_mean": {
+      "mean": -0.0009,
+      "std": 0.0044,
+      "seeds_quantum_better": 4
+     },
+     "dx_r2": {
+      "mean": -0.0031,
+      "std": 0.0095,
+      "seeds_quantum_better": 3
+     },
+     "dy_r2": {
+      "mean": -0.0003,
+      "std": 0.0055,
+      "seeds_quantum_better": 3
+     },
+     "log_r_r2": {
+      "mean": 0.0061,
+      "std": 0.0066,
+      "seeds_quantum_better": 4
+     }
+    }
+   },
+   "d16_n2000": {
+    "seeds": 5,
+    "test_craters": 331,
+    "train_craters": 1000,
+    "QK-A": {
+     "centre_err_km_mean": [
+      0.5899,
+      0.0015
+     ],
+     "centre_err_km_median": [
+      0.6161,
+      0.0117
+     ],
+     "radius_rel_err_mean": [
+      0.237,
+      0.0068
+     ],
+     "radius_rel_err_median": [
+      0.1671,
+      0.0033
+     ],
+     "dx_r2": [
+      -0.0163,
+      0.0107
+     ],
+     "dy_r2": [
+      0.0071,
+      0.0098
+     ],
+     "log_r_r2": [
+      0.5588,
+      0.0217
+     ],
+     "centre_err_km_band0": [
+      0.5935,
+      0.0032
+     ],
+     "centre_err_km_band1": [
+      0.5921,
+      0.0103
+     ],
+     "centre_err_km_band2": [
+      0.5377,
+      0.0132
+     ],
+     "radius_rel_err_band0": [
+      0.2469,
+      0.0101
+     ],
+     "radius_rel_err_band1": [
+      0.1993,
+      0.0011
+     ],
+     "radius_rel_err_band2": [
+      0.2817,
+      0.0178
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.5",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "QK-Z": {
+     "centre_err_km_mean": [
+      0.5898,
+      0.0016
+     ],
+     "centre_err_km_median": [
+      0.618,
+      0.0086
+     ],
+     "radius_rel_err_mean": [
+      0.2372,
+      0.0064
+     ],
+     "radius_rel_err_median": [
+      0.1709,
+      0.0092
+     ],
+     "dx_r2": [
+      -0.0174,
+      0.0098
+     ],
+     "dy_r2": [
+      0.0082,
+      0.0087
+     ],
+     "log_r_r2": [
+      0.5516,
+      0.0189
+     ],
+     "centre_err_km_band0": [
+      0.5935,
+      0.0033
+     ],
+     "centre_err_km_band1": [
+      0.5916,
+      0.0101
+     ],
+     "centre_err_km_band2": [
+      0.5375,
+      0.0144
+     ],
+     "radius_rel_err_band0": [
+      0.2458,
+      0.0102
+     ],
+     "radius_rel_err_band1": [
+      0.198,
+      0.0025
+     ],
+     "radius_rel_err_band2": [
+      0.3054,
+      0.0344
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.5",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "QK-P": {
+     "centre_err_km_mean": [
+      0.5925,
+      0.005
+     ],
+     "centre_err_km_median": [
+      0.6187,
+      0.0109
+     ],
+     "radius_rel_err_mean": [
+      0.2318,
+      0.0072
+     ],
+     "radius_rel_err_median": [
+      0.1674,
+      0.0044
+     ],
+     "dx_r2": [
+      -0.0398,
+      0.0453
+     ],
+     "dy_r2": [
+      0.003,
+      0.0147
+     ],
+     "log_r_r2": [
+      0.5685,
+      0.0217
+     ],
+     "centre_err_km_band0": [
+      0.5961,
+      0.0046
+     ],
+     "centre_err_km_band1": [
+      0.5957,
+      0.0125
+     ],
+     "centre_err_km_band2": [
+      0.5352,
+      0.0107
+     ],
+     "radius_rel_err_band0": [
+      0.2385,
+      0.0101
+     ],
+     "radius_rel_err_band1": [
+      0.1983,
+      0.0037
+     ],
+     "radius_rel_err_band2": [
+      0.2962,
+      0.0134
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "1.0/0.5",
+      "log_r": "1.0/0.2"
+     }
+    },
+    "RBF": {
+     "centre_err_km_mean": [
+      0.592,
+      0.004
+     ],
+     "centre_err_km_median": [
+      0.6189,
+      0.0119
+     ],
+     "radius_rel_err_mean": [
+      0.23,
+      0.0045
+     ],
+     "radius_rel_err_median": [
+      0.1664,
+      0.005
+     ],
+     "dx_r2": [
+      -0.0363,
+      0.0383
+     ],
+     "dy_r2": [
+      0.0054,
+      0.0164
+     ],
+     "log_r_r2": [
+      0.5739,
+      0.0146
+     ],
+     "centre_err_km_band0": [
+      0.5957,
+      0.0041
+     ],
+     "centre_err_km_band1": [
+      0.595,
+      0.0116
+     ],
+     "centre_err_km_band2": [
+      0.5335,
+      0.01
+     ],
+     "radius_rel_err_band0": [
+      0.2369,
+      0.0061
+     ],
+     "radius_rel_err_band1": [
+      0.1969,
+      0.0027
+     ],
+     "radius_rel_err_band2": [
+      0.2923,
+      0.019
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "1.0/0.5",
+      "log_r": "1.0/0.2"
+     }
+    },
+    "trivial": {
+     "centre_err_km_mean": [
+      0.5916,
+      0.0
+     ],
+     "centre_err_km_median": [
+      0.6204,
+      0.0
+     ],
+     "radius_rel_err_mean": [
+      0.3143,
+      0.0029
+     ],
+     "radius_rel_err_median": [
+      0.3009,
+      0.0035
+     ],
+     "dx_r2": [
+      -0.001,
+      0.0
+     ],
+     "dy_r2": [
+      -0.0016,
+      0.0
+     ],
+     "log_r_r2": [
+      -0.0182,
+      0.0041
+     ],
+     "centre_err_km_band0": [
+      0.5947,
+      0.0
+     ],
+     "centre_err_km_band1": [
+      0.5908,
+      0.0
+     ],
+     "centre_err_km_band2": [
+      0.557,
+      0.0
+     ],
+     "radius_rel_err_band0": [
+      0.2622,
+      0.0058
+     ],
+     "radius_rel_err_band1": [
+      0.3713,
+      0.004
+     ],
+     "radius_rel_err_band2": [
+      0.6935,
+      0.0019
+     ]
+    },
+    "QK-A_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.002,
+      "std": 0.0027,
+      "seeds_quantum_better": 4
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0069,
+      "std": 0.0049,
+      "seeds_quantum_better": 0
+     },
+     "dx_r2": {
+      "mean": 0.0201,
+      "std": 0.0283,
+      "seeds_quantum_better": 5
+     },
+     "dy_r2": {
+      "mean": 0.0017,
+      "std": 0.0128,
+      "seeds_quantum_better": 2
+     },
+     "log_r_r2": {
+      "mean": -0.0151,
+      "std": 0.0151,
+      "seeds_quantum_better": 0
+     }
+    },
+    "QK-Z_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0022,
+      "std": 0.0025,
+      "seeds_quantum_better": 5
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0072,
+      "std": 0.0046,
+      "seeds_quantum_better": 0
+     },
+     "dx_r2": {
+      "mean": 0.019,
+      "std": 0.029,
+      "seeds_quantum_better": 5
+     },
+     "dy_r2": {
+      "mean": 0.0028,
+      "std": 0.0112,
+      "seeds_quantum_better": 2
+     },
+     "log_r_r2": {
+      "mean": -0.0223,
+      "std": 0.0157,
+      "seeds_quantum_better": 0
+     }
+    },
+    "QK-P_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": 0.0006,
+      "std": 0.0012,
+      "seeds_quantum_better": 3
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0017,
+      "std": 0.0058,
+      "seeds_quantum_better": 4
+     },
+     "dx_r2": {
+      "mean": -0.0035,
+      "std": 0.007,
+      "seeds_quantum_better": 2
+     },
+     "dy_r2": {
+      "mean": -0.0024,
+      "std": 0.0047,
+      "seeds_quantum_better": 1
+     },
+     "log_r_r2": {
+      "mean": -0.0054,
+      "std": 0.0155,
+      "seeds_quantum_better": 4
+     }
+    }
+   },
+   "d20_n500": {
+    "seeds": 5,
+    "test_craters": 331,
+    "train_craters": 250,
+    "QK-A": {
+     "centre_err_km_mean": [
+      0.5896,
+      0.0027
+     ],
+     "centre_err_km_median": [
+      0.6142,
+      0.0096
+     ],
+     "radius_rel_err_mean": [
+      0.2506,
+      0.0099
+     ],
+     "radius_rel_err_median": [
+      0.1897,
+      0.0044
+     ],
+     "dx_r2": [
+      -0.0091,
+      0.01
+     ],
+     "dy_r2": [
+      0.0085,
+      0.0054
+     ],
+     "log_r_r2": [
+      0.5173,
+      0.0159
+     ],
+     "centre_err_km_band0": [
+      0.5935,
+      0.0024
+     ],
+     "centre_err_km_band1": [
+      0.5902,
+      0.0059
+     ],
+     "centre_err_km_band2": [
+      0.5393,
+      0.0195
+     ],
+     "radius_rel_err_band0": [
+      0.2574,
+      0.0159
+     ],
+     "radius_rel_err_band1": [
+      0.2157,
+      0.0084
+     ],
+     "radius_rel_err_band2": [
+      0.3209,
+      0.0414
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "QK-Z": {
+     "centre_err_km_mean": [
+      0.5899,
+      0.0026
+     ],
+     "centre_err_km_median": [
+      0.6169,
+      0.0082
+     ],
+     "radius_rel_err_mean": [
+      0.2479,
+      0.0082
+     ],
+     "radius_rel_err_median": [
+      0.1879,
+      0.0057
+     ],
+     "dx_r2": [
+      -0.0103,
+      0.01
+     ],
+     "dy_r2": [
+      0.0108,
+      0.0089
+     ],
+     "log_r_r2": [
+      0.5232,
+      0.0134
+     ],
+     "centre_err_km_band0": [
+      0.5937,
+      0.0023
+     ],
+     "centre_err_km_band1": [
+      0.5901,
+      0.0051
+     ],
+     "centre_err_km_band2": [
+      0.5427,
+      0.0165
+     ],
+     "radius_rel_err_band0": [
+      0.253,
+      0.015
+     ],
+     "radius_rel_err_band1": [
+      0.2157,
+      0.0111
+     ],
+     "radius_rel_err_band2": [
+      0.3269,
+      0.0483
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "10.0/0.2"
+     }
+    },
+    "QK-P": {
+     "centre_err_km_mean": [
+      0.5904,
+      0.0019
+     ],
+     "centre_err_km_median": [
+      0.6177,
+      0.0079
+     ],
+     "radius_rel_err_mean": [
+      0.2423,
+      0.0054
+     ],
+     "radius_rel_err_median": [
+      0.1894,
+      0.0062
+     ],
+     "dx_r2": [
+      -0.0123,
+      0.01
+     ],
+     "dy_r2": [
+      0.0099,
+      0.0063
+     ],
+     "log_r_r2": [
+      0.5294,
+      0.0125
+     ],
+     "centre_err_km_band0": [
+      0.5939,
+      0.0019
+     ],
+     "centre_err_km_band1": [
+      0.591,
+      0.0052
+     ],
+     "centre_err_km_band2": [
+      0.5452,
+      0.0118
+     ],
+     "radius_rel_err_band0": [
+      0.2412,
+      0.0099
+     ],
+     "radius_rel_err_band1": [
+      0.2182,
+      0.0087
+     ],
+     "radius_rel_err_band2": [
+      0.3613,
+      0.014
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "1.0/0.1"
+     }
+    },
+    "RBF": {
+     "centre_err_km_mean": [
+      0.5901,
+      0.0021
+     ],
+     "centre_err_km_median": [
+      0.6158,
+      0.0089
+     ],
+     "radius_rel_err_mean": [
+      0.244,
+      0.0081
+     ],
+     "radius_rel_err_median": [
+      0.1898,
+      0.0068
+     ],
+     "dx_r2": [
+      -0.0109,
+      0.0103
+     ],
+     "dy_r2": [
+      0.0098,
+      0.0061
+     ],
+     "log_r_r2": [
+      0.5252,
+      0.0155
+     ],
+     "centre_err_km_band0": [
+      0.5939,
+      0.0018
+     ],
+     "centre_err_km_band1": [
+      0.59,
+      0.0061
+     ],
+     "centre_err_km_band2": [
+      0.5441,
+      0.0125
+     ],
+     "radius_rel_err_band0": [
+      0.2442,
+      0.0153
+     ],
+     "radius_rel_err_band1": [
+      0.2177,
+      0.0094
+     ],
+     "radius_rel_err_band2": [
+      0.3567,
+      0.017
+     ],
+     "chosen_C_epsilon": {
+      "dx": "0.1/0.5",
+      "dy": "0.1/0.05",
+      "log_r": "1.0/0.1"
+     }
+    },
+    "trivial": {
+     "centre_err_km_mean": [
+      0.5916,
+      0.0
+     ],
+     "centre_err_km_median": [
+      0.6204,
+      0.0
+     ],
+     "radius_rel_err_mean": [
+      0.3122,
+      0.0079
+     ],
+     "radius_rel_err_median": [
+      0.2994,
+      0.0059
+     ],
+     "dx_r2": [
+      -0.001,
+      0.0
+     ],
+     "dy_r2": [
+      -0.0016,
+      0.0
+     ],
+     "log_r_r2": [
+      -0.0228,
+      0.0113
+     ],
+     "centre_err_km_band0": [
+      0.5947,
+      0.0
+     ],
+     "centre_err_km_band1": [
+      0.5908,
+      0.0
+     ],
+     "centre_err_km_band2": [
+      0.557,
+      0.0
+     ],
+     "radius_rel_err_band0": [
+      0.2579,
+      0.0158
+     ],
+     "radius_rel_err_band1": [
+      0.3745,
+      0.011
+     ],
+     "radius_rel_err_band2": [
+      0.695,
+      0.0054
+     ]
+    },
+    "QK-A_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0005,
+      "std": 0.0012,
+      "seeds_quantum_better": 2
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0066,
+      "std": 0.0055,
+      "seeds_quantum_better": 0
+     },
+     "dx_r2": {
+      "mean": 0.0018,
+      "std": 0.0016,
+      "seeds_quantum_better": 5
+     },
+     "dy_r2": {
+      "mean": -0.0014,
+      "std": 0.0012,
+      "seeds_quantum_better": 1
+     },
+     "log_r_r2": {
+      "mean": -0.0079,
+      "std": 0.0037,
+      "seeds_quantum_better": 0
+     }
+    },
+    "QK-Z_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": -0.0001,
+      "std": 0.0014,
+      "seeds_quantum_better": 2
+     },
+     "radius_rel_err_mean": {
+      "mean": 0.0039,
+      "std": 0.0092,
+      "seeds_quantum_better": 1
+     },
+     "dx_r2": {
+      "mean": 0.0005,
+      "std": 0.0026,
+      "seeds_quantum_better": 4
+     },
+     "dy_r2": {
+      "mean": 0.001,
+      "std": 0.0034,
+      "seeds_quantum_better": 2
+     },
+     "log_r_r2": {
+      "mean": -0.0021,
+      "std": 0.0068,
+      "seeds_quantum_better": 1
+     }
+    },
+    "QK-P_minus_RBF": {
+     "centre_err_km_mean": {
+      "mean": 0.0003,
+      "std": 0.0005,
+      "seeds_quantum_better": 1
+     },
+     "radius_rel_err_mean": {
+      "mean": -0.0016,
+      "std": 0.005,
+      "seeds_quantum_better": 4
+     },
+     "dx_r2": {
+      "mean": -0.0014,
+      "std": 0.0024,
+      "seeds_quantum_better": 2
+     },
+     "dy_r2": {
+      "mean": 0.0001,
+      "std": 0.0003,
+      "seeds_quantum_better": 3
+     },
+     "log_r_r2": {
+      "mean": 0.0042,
+      "std": 0.0065,
+      "seeds_quantum_better": 4
+     }
+    }
+   }
+  },
+  "note": "[mean, std] over the seeds; test = the true craters among the 2,000 fixed test candidates (QH5); kernel = that of the chosen QSVC of QI4.3 (QK maps) or of the chosen QJ1 RBF (RBF) of the same unit, restricted to the positives; C, epsilon per target by the spatial CV of QI4.2 on the training positives (mean fold MAE of the standardised target); trivial = cell centre and median training radius; centre error with the east-west cell size x cos(lat); R^2 against the test mean (0 = no better than the mean, < 0 worse); runs in results/qi7_runs.csv"
  }
 }

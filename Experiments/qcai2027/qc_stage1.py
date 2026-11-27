@@ -75,8 +75,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from qc_data import CONFIG_PATH, load_config, load_report, save_report, written  # noqa: E402
-from qc_fusion import VARIANTS, TokenStore, owned_index, tile_classes, variant_maps  # noqa: E402
+from qc_data import CONFIG_PATH, load_config, load_report, save_report, token_grid, written  # noqa: E402
+from qc_fusion import VARIANTS, TokenStore, owned_index, tile_classes, variant_ids, variant_maps  # noqa: E402
 from qc_probes import average_precision, band_masks  # noqa: E402
 
 
@@ -91,7 +91,7 @@ def owned_mask(cfg: dict) -> np.ndarray:
 
     t = cfg["tiling"]
     (lr, lc), _ = owned_cells(0, 0, int(t["tile_px"]), int(t["stride_px"]), int(t["cell_px"]))
-    g = int(t["tile_px"]) // int(t["cell_px"])
+    g = token_grid(cfg)
     m = np.zeros((g, g), bool)
     m[lr, lc] = True
     return m
@@ -104,7 +104,7 @@ def set_maps(cfg: dict, store: TokenStore, vid: str, set_name: str, device, max_
     import torch
 
     rows = np.flatnonzero(store.index["set"] == set_name)[:max_tiles]
-    maps = torch.cat([torch.from_numpy(variant_maps(store, vid, rows[s:s + chunk]).astype(np.float16)).to(device)
+    maps = torch.cat([torch.from_numpy(variant_maps(store, vid, rows[s:s + chunk], dtype=np.float16)).to(device)
                       for s in range(0, rows.size, chunk)])
     g = maps.shape[1]
     return maps, rows, tile_classes(cfg, store, rows).reshape(-1, g, g)
@@ -195,7 +195,7 @@ def run_train(cfg: dict, device: str = "cuda", smoke: bool = False) -> dict:
     import torch
 
     torch.backends.cuda.matmul.allow_tf32 = torch.backends.cudnn.allow_tf32 = False
-    variants = list(VARIANTS)[:2] if smoke else list(VARIANTS)
+    variants = variant_ids(smoke)
     mx, ep = (40, 2) if smoke else (None, None)
     store = TokenStore(cfg)
     own = owned_mask(cfg)
@@ -273,8 +273,7 @@ def confusion_zones(cfg: dict) -> dict:
     import pandas as pd
     from scipy.ndimage import binary_dilation
 
-    from qc_figures import pixel_km
-    from qc_data import region_layout
+    from qc_data import pixel_km, region_grid
 
     lab = np.load(cfg["paths"]["output"] / "cell_labels.npz")
     cls = lab["cls"]
@@ -285,7 +284,7 @@ def confusion_zones(cfg: dict) -> dict:
     d_lo = float(cfg["stage1"]["trigger_min_diam_km"])
     d_hi = float(cfg["labels"]["diam_range_km"][1])
     cr = cr[cr["diam_km"].between(d_lo, d_hi, inclusive="left")]
-    px = pixel_km(region_layout(cfg, "wac").grid)
+    px = pixel_km(region_grid(cfg, "wac"))
     in_circle = np.zeros(cls.shape, bool)
     for k in cr.itertuples():
         ry = k.diam_km / 2 / px                                          # radius in pixels, N-S
@@ -309,7 +308,7 @@ def run_threshold(cfg: dict, device: str = "cpu", smoke: bool = False) -> dict:
     recall per band, the precision, and the trigger of QB2.5: share of the false positives in the
     confusion zones (``confusion_zones``) against the share of such cells among all the negatives."""
     target = float(cfg["stage1"]["recall"])
-    variants = list(VARIANTS)[:2] if smoke else list(VARIANTS)
+    variants = variant_ids(smoke)
     mx = 40 if smoke else None
     store = TokenStore(cfg)
     zones = confusion_zones(cfg)
@@ -387,16 +386,15 @@ def run_candidates(cfg: dict, device: str = "cpu", smoke: bool = False) -> dict:
     block-bootstrap CI) and, for QK-pool, the labelled candidates per class, band and density tercile (QH4)."""
     import pandas as pd
 
-    from qc_data import cell_blocks, region_grid
+    from qc_data import region_cell_blocks
     from qc_probes import block_bootstrap, bootstrap_ap, ci95
 
-    variants = list(VARIANTS)[:2] if smoke else list(VARIANTS)
+    variants = variant_ids(smoke)
     mx = 40 if smoke else None
     thr = load_report(cfg, "QH2")["variants"]
     store = TokenStore(cfg)
     lab = np.load(cfg["paths"]["output"] / "cell_labels.npz")
-    cb = cell_blocks(region_grid(cfg, "wac"), lab["cls"].shape, int(cfg["tiling"]["cell_px"]), cfg["region"],
-                     float(cfg["split"]["block_deg"]))
+    cb = region_cell_blocks(cfg, lab["cls"].shape)
     blocks_csv = pd.read_csv(cfg["paths"]["output"] / "split_blocks.csv")
     n_c = int(blocks_csv["bj"].max()) + 1
     stratum = dict(zip(blocks_csv["bi"] * n_c + blocks_csv["bj"], blocks_csv["stratum"]))

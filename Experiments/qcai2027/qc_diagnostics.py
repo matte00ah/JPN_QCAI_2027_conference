@@ -74,7 +74,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from qc_data import CONFIG_PATH, load_config, save_report  # noqa: E402
 from qc_experiments import zz_kernel_and_expectations  # noqa: E402
 from qc_kernels import (feature_angles, features_path, kernel_projected, kernel_qk_a, load_qk,  # noqa: E402
-                        median_gamma, reduce_features)
+                        median_gamma, reduce_features, rep_suffix)
 
 g3 = lambda x: float(f"{x:.3g}")
 
@@ -170,19 +170,24 @@ ALIGN_COLS = ["step", "script", "variant", "n", "seed", "d", "map", "r", "s", "c
               "cv_f1_best_C"]
 
 
+def centre(k: np.ndarray) -> np.ndarray:
+    """H K H, H = I - 11^T / n: the kernel without its constant part (to which the SVM with a bias is blind)."""
+    return k - k.mean(0, keepdims=True) - k.mean(1, keepdims=True) + k.mean()
+
+
 def alignment(k: np.ndarray, y: np.ndarray, centered: bool = False) -> float:
     """Kernel-target alignment <K, t t^T>_F / (||K||_F ||t t^T||_F), t = 2y - 1 (Cristianini et al. 2001); with
     ``centered`` K is first centred in feature space, H K H with H = I - 11^T / n (Cortes et al. 2012), which makes it
     invariant to a constant added to K, as the SVM with a bias.  NaN for a zero (e.g. constant, centred) kernel."""
     t = 2.0 * np.asarray(y, dtype=np.float64) - 1
     if centered:
-        k = k - k.mean(0, keepdims=True) - k.mean(1, keepdims=True) + k.mean()
+        k = centre(k)
     nk = np.linalg.norm(k)
     return float(t @ k @ t / (nk * t.size)) if nk > 1e-300 else float("nan")
 
 
 def kernel_label(m: str, r) -> str:
-    return m if m == "QK-A" else f"{m}_r{int(r)}"
+    return m + rep_suffix(m, r)
 
 
 def alignment_table(cfg: dict, device: str) -> "pd.DataFrame":
@@ -357,7 +362,7 @@ def run_geometric(cfg: dict, device: str = "cuda") -> dict:
     Report: [mean, std] over the seeds."""
     import pandas as pd
 
-    from qc_experiments import qi4_paths, stage2_kernels
+    from qc_experiments import config_rs, qi4_paths, stage2_kernels
 
     main = cfg["stage2"]["main"]
     vid, n = main["variant"], int(main["n"])
@@ -376,8 +381,7 @@ def run_geometric(cfg: dict, device: str = "cuda") -> dict:
             g_med = median_gamma(a_tr)
             rbf = {sc: kernel_projected(a_tr, a_tr, sc * g_med) for sc in scales}
             for row in chosen[(chosen["d"] == d) & (chosen["seed"] == seed)].itertuples():
-                r = 1 if pd.isna(row.r) else int(row.r)
-                gs = 1.0 if pd.isna(row.s) else float(row.s)
+                r, gs = config_rs(row.r, row.s)
                 k_q = stage2_kernels(row.map, a_tr, a_tr[:1], float(row.c), r, gs, device=device)[0]
                 check_self = max(check_self, abs(geometric_difference(k_q, k_q, [1e-9])[1e-9] - 1))
                 for sc, k_c in rbf.items():
@@ -415,11 +419,6 @@ def run_geometric(cfg: dict, device: str = "cuda") -> dict:
 # ---------------------------------------------------------------------------
 
 
-def centre(k: np.ndarray) -> np.ndarray:
-    """H K H, H = I - 11^T / n: the kernel without its constant part (to which the SVM with a bias is blind)."""
-    return k - k.mean(0, keepdims=True) - k.mean(1, keepdims=True) + k.mean()
-
-
 def spectrum_stats(k: np.ndarray, top: int = 20) -> dict:
     """Spectrum of a kernel normalised to trace N (eigenvalues clipped at 0): participation ratio (sum l)^2 / sum l^2
     (1 = one eigenvalue dominates, a nearly constant kernel; N = flat spectrum, the identity, memorisation), the number
@@ -442,7 +441,7 @@ def run_spectrum(cfg: dict, device: str = "cuda") -> dict:
     import pandas as pd
 
     from qc_data import load_report
-    from qc_experiments import qi4_paths, stage2_kernels
+    from qc_experiments import config_rs, qi4_paths, stage2_kernels
 
     main, dg = cfg["stage2"]["main"], cfg["diagnostics"]
     vid, n = main["variant"], int(main["n"])
@@ -461,8 +460,7 @@ def run_spectrum(cfg: dict, device: str = "cuda") -> dict:
             a_tr = reduce_features(x_tr, d)[0]
             g_med = median_gamma(a_tr)
             for row in chosen[(chosen["d"] == d) & (chosen["seed"] == seed)].itertuples():
-                r = 1 if pd.isna(row.r) else int(row.r)
-                gs = 1.0 if pd.isna(row.s) else float(row.s)
+                r, gs = config_rs(row.r, row.s)
                 k_q = stage2_kernels(row.map, a_tr, a_tr[:1], float(row.c), r, gs, device=device)[0]
                 sc = gd[row.map][f"d{d}"][f"lambda{lam:g}"]["argmin_gamma_scale_per_seed"][i]
                 k_r = kernel_projected(a_tr, a_tr, sc * g_med)

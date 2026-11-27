@@ -116,8 +116,9 @@ from typing import Callable
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from qc_data import (CONFIG_PATH, MOON_RADIUS_M, SETS, CylGrid, RegionSource,  # noqa: E402
-                     _import_dataset_modules, load_config, read_inventory, read_region, region_layout, save_report, written)
+from qc_data import (CONFIG_PATH, SETS, CylGrid, RegionSource,  # noqa: E402
+                     load_config, pixel_m, read_inventory, read_region, region_grid, region_layout, save_report,
+                     written)
 from qc_tiles import tile_grid_shape, tile_window  # noqa: E402
 
 STRIP_ROWS = 1024
@@ -125,7 +126,6 @@ STRIP_ROWS = 1024
 
 def stage_dir(cfg: dict) -> Path:
     """Folder of the stage of the experiment in the cleaned dataset."""
-    _import_dataset_modules(cfg)
     from data_inventory import clean_dataset_dir  # noqa: E402
     return clean_dataset_dir(cfg["paths"]["dataset_root"], cfg["preprocess"]["stage"])
 
@@ -154,6 +154,13 @@ def open_or_write(out: Path, shape: tuple[int, int], read_rows, force: bool, che
     if checks_only and out.exists() and not force:
         return np.load(out, mmap_mode="r")
     return write_raster(out, shape, read_rows, force=force, **kw)
+
+
+def write_meta(out: Path, meta: dict) -> None:
+    """JSON sidecar of the raster ``out`` (grid, sources, no-data, statistics)."""
+    side = out.with_suffix(".json")
+    side.write_text(json.dumps(meta, indent=2))
+    written(side)
 
 
 def grid_meta(g: CylGrid) -> dict:
@@ -217,8 +224,7 @@ def run_wac(cfg: dict, force: bool = False, checks_only: bool = False) -> dict:
                      "dst_cols": [p.dst_cols.start, p.dst_cols.stop]} for p in src.pieces],
         "d15_shift_rc_applied_to_mosaic": list(shift), "stats": stats,
     }
-    out.with_suffix(".json").write_text(json.dumps(meta, indent=2))
-    written(out.with_suffix(".json"))
+    write_meta(out, meta)
     report = {"output": str(out), "shape": list(arr.shape), "size_gb": out.stat().st_size / 1e9, **stats,
               "check_windows_equal_read_region": same, "check_windows": windows,
               "equator_seam_rows": [seam - 1, seam], "equator_seam_rows_valid_fraction": seam_rows_valid}
@@ -243,7 +249,6 @@ def read_dem_height(src: RegionSource, rows: slice, cols: slice, unit: str) -> n
 def run_dem(cfg: dict, step: int = 8, strip_rows: int = 4096) -> dict:
     """QC1.2 checks: unit and offset of the products, conversion against the stored values,
     validity and statistics of the height of R (every ``step``-th row and column)."""
-    _import_dataset_modules(cfg)
     from diag_dem_sources import REF_RADIUS_M  # noqa: E402
 
     src = region_layout(cfg, "dem")
@@ -294,11 +299,6 @@ def run_dem(cfg: dict, step: int = 8, strip_rows: int = 4096) -> dict:
     return report
 
 
-def pixel_m(g: CylGrid) -> float:
-    """N-S pixel size (m) of an equirectangular grid on the reference sphere."""
-    return 2 * np.pi * MOON_RADIUS_M / 360.0 / g.ppd
-
-
 def dem_on_grid(dem: RegionSource, unit: str, target: CylGrid, rows: slice, k: int) -> np.ndarray:
     """QC2.1: DEM height (m) at the centres of the pixels ``rows`` x all columns of ``target``:
     mean of k x k DEM pixels (aligned with the DEM grid), then bilinear interpolation
@@ -322,9 +322,8 @@ def dem_on_grid(dem: RegionSource, unit: str, target: CylGrid, rows: slice, k: i
 
 def run_dem_grid(cfg: dict, force: bool = False, checks_only: bool = False, step: int = 16) -> dict:
     """QC2.1: DEM on the WAC grid of R -> ``<stage>/<layers.dem>``, with checks."""
-    _import_dataset_modules(cfg)
     dem, unit = region_layout(cfg, "dem"), dem_unit(cfg)
-    target = region_layout(cfg, "wac").grid
+    target = region_grid(cfg, "wac")
     k = max(1, int(round(pixel_m(target) / pixel_m(dem.grid))))
     out = raster_path(cfg, "dem")
     shape = (target.lines, target.samples)
@@ -366,8 +365,7 @@ def run_dem_grid(cfg: dict, force: bool = False, checks_only: bool = False, step
         **grid_meta(target), "block_k": k, "effective_pixel_m": k * pixel_m(dem.grid),
         "sources": list(dem.rasters), "stats": stats,
     }
-    out.with_suffix(".json").write_text(json.dumps(meta, indent=2))
-    written(out.with_suffix(".json"))
+    write_meta(out, meta)
     report = {
         "output": str(out), "shape": list(shape), "size_gb": out.stat().st_size / 1e9,
         "wac_pixel_m": pixel_m(target), "dem_pixel_m": pixel_m(dem.grid), "block_k": k,
@@ -400,12 +398,11 @@ def run_coreg(cfg: dict, step_deg: float = 3.0, win: int = 256, tol_px: float = 
 
     import pandas as pd
 
-    _import_dataset_modules(cfg)
     from diag_coregistration import measure  # noqa: E402
 
     reg = cfg["region"]
     # (a) windows of the dataset diagnostics inside R
-    diag_csv = cfg["paths"]["source_root"] / "preprocessing/diagnostics/B4/coregistration.csv"
+    diag_csv = cfg["paths"]["coregistration"]
     d = pd.read_csv(diag_csv)
     d = d[(d["target"] == "WAC_GLOBAL") & d["product_id"].isin(cfg["products"]["wac"])
           & d["lat"].between(reg["lat_min"], reg["lat_max"]) & d["lon"].between(reg["lon_min"], reg["lon_max"])]
@@ -420,7 +417,7 @@ def run_coreg(cfg: dict, step_deg: float = 3.0, win: int = 256, tol_px: float = 
                                         for pid, gg in g.groupby("product_id")}
 
     # (b) re-measured on the rasters of the stage
-    grid = region_layout(cfg, "wac").grid
+    grid = region_grid(cfg, "wac")
     wac = np.load(raster_path(cfg, "wac"), mmap_mode="r")
     dem = np.load(raster_path(cfg, "dem"), mmap_mode="r")
     px_m = pixel_m(grid)
@@ -645,15 +642,14 @@ def run_relief(cfg: dict, force: bool = False, checks_only: bool = False, step: 
     meta = {
         "layer": "relief", "step": "QC4.1", "dtype": "float16", "nodata": "NaN", "unit": "m",
         "values": "DEM height on the WAC grid of R (QC2.1) minus its Gaussian-smoothed version",
-        **grid_meta(region_layout(cfg, "wac").grid), "sigma_px": sigma, "truncate": truncate, "kernel_radius_px": radius,
+        **grid_meta(region_grid(cfg, "wac")), "sigma_px": sigma, "truncate": truncate, "kernel_radius_px": radius,
         "border": "scipy gaussian_filter mode='reflect' at the border of R", "source": str(raster_path(cfg, "dem")),
         "stats": stats,
     }
-    out.with_suffix(".json").write_text(json.dumps(meta, indent=2))
-    written(out.with_suffix(".json"))
+    write_meta(out, meta)
     report = {
         "output": str(out), "shape": list(arr.shape), "size_gb": out.stat().st_size / 1e9,
-        "sigma_px": sigma, "sigma_km_ns": sigma * pixel_m(region_layout(cfg, "wac").grid) / 1000.0,
+        "sigma_px": sigma, "sigma_km_ns": sigma * pixel_m(region_grid(cfg, "wac")) / 1000.0,
         "truncate": truncate, "kernel_radius_px": radius, **stats,
         "subsample_step": step,
         "height_m_std": float(h.std()), "relief_m_std": float(rl.std()), "relief_m_mean": float(rl.mean()),
@@ -714,7 +710,7 @@ def border_effect(cfg: dict, band_px: int, lines: int, samples: int) -> dict:
 
 def run_slope(cfg: dict, force: bool = False, checks_only: bool = False, step: int = 4) -> dict:
     """QC4.2: slope of the DEM on the WAC grid of R -> ``<stage>/<layers.slope>``, with checks."""
-    grid = region_layout(cfg, "wac").grid
+    grid = region_grid(cfg, "wac")
     dem = np.load(raster_path(cfg, "dem"), mmap_mode="r")
     out = raster_path(cfg, "slope")
     arr = open_or_write(out, dem.shape, lambda r0, r1: slope_deg(dem, slice(r0, r1), grid),
@@ -746,8 +742,7 @@ def run_slope(cfg: dict, force: bool = False, checks_only: bool = False, step: i
         **grid_meta(grid), "pixel_m_ns": pixel_m(grid), "border": "one-sided differences on the first/last row and column of R",
         "source": str(raster_path(cfg, "dem")), "stats": stats,
     }
-    out.with_suffix(".json").write_text(json.dumps(meta, indent=2))
-    written(out.with_suffix(".json"))
+    write_meta(out, meta)
     report = {
         "output": str(out), "shape": list(arr.shape), "size_gb": out.stat().st_size / 1e9, **stats,
         "pixel_m_ns": pixel_m(grid),
@@ -779,7 +774,7 @@ def run_hillshade(cfg: dict, force: bool = False, checks_only: bool = False, n_w
     """QC4.3: hillshade of the DEM on the WAC grid of R -> ``<stage>/<layers.hillshade>``, with checks."""
     az = float(cfg["derivatives"]["hillshade_azimuth_deg"])
     alt = float(cfg["derivatives"]["hillshade_altitude_deg"])
-    grid = region_layout(cfg, "wac").grid
+    grid = region_grid(cfg, "wac")
     dem = np.load(raster_path(cfg, "dem"), mmap_mode="r")
     out = raster_path(cfg, "hillshade")
 
@@ -832,8 +827,7 @@ def run_hillshade(cfg: dict, force: bool = False, checks_only: bool = False, n_w
         **grid_meta(grid), "azimuth_deg": az, "altitude_deg": alt, "gradient": "dem_gradient (QC4.2)",
         "source": str(raster_path(cfg, "dem")), "stats": stats,
     }
-    out.with_suffix(".json").write_text(json.dumps(meta, indent=2))
-    written(out.with_suffix(".json"))
+    write_meta(out, meta)
     report = {
         "output": str(out), "shape": list(arr.shape), "size_gb": out.stat().st_size / 1e9,
         "azimuth_deg": az, "altitude_deg": alt, **stats,

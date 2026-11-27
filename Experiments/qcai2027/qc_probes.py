@@ -82,8 +82,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from qc_data import CONFIG_PATH, cell_blocks, load_config, load_report, region_grid, save_report, written  # noqa: E402
-from qc_fusion import VARIANTS, TokenStore, owned_samples  # noqa: E402
+from qc_data import CONFIG_PATH, load_config, load_report, region_cell_blocks, save_report, written  # noqa: E402
+from qc_fusion import VARIANTS, TokenStore, owned_samples, variant_ids  # noqa: E402
 
 BANDS = ("1_2_km", "2_4_km", "4_8_km")
 
@@ -190,9 +190,14 @@ def fit_logistic(x, y, C: float, max_iter: int = 1000):
     return w.detach(), b.detach(), info
 
 
+def standardise_stats(train):
+    """(mean, std clamped at 1e-6) per feature of ``train`` (tensor)."""
+    return train.mean(0), train.std(0).clamp(min=1e-6)
+
+
 def standardise(train, *others):
     """Features standardised with the mean / std of ``train`` (tensors)."""
-    mu, sd = train.mean(0), train.std(0).clamp(min=1e-6)
+    mu, sd = standardise_stats(train)
     return [(t - mu) / sd for t in (train, *others)]
 
 
@@ -312,7 +317,7 @@ def fit_pca_probe(cfg: dict, x_tr, y_tr, x_va, y_va: np.ndarray) -> dict:
     out = {}
     for d in dims:
         a_tr, a_va = standardise(p_tr[:, :d], p_va[:, :d])
-        mu_d, sd_d = p_tr[:, :d].mean(0), p_tr[:, :d].std(0).clamp(min=1e-6)
+        mu_d, sd_d = standardise_stats(p_tr[:, :d])
         (pred,), det = fit_linear_probe(cfg, a_tr, y_tr, a_va, y_va)[""]
         out[f"d{d}"] = ([lambda x, d=d, m=mu_d, s=sd_d, f=pred: f((proj(x)[:, :d] - m) / s)],
                         {"explained_variance_s1_train": round(float(frac[:d].sum()), 4), **det})
@@ -333,15 +338,14 @@ def run_probe(cfg: dict, kind: str, device: str = "cuda", smoke: bool = False) -
 
     step, fit, std_first = PROBES[kind]
     torch.backends.cuda.matmul.allow_tf32 = False                 # exact float32 for the probes
-    variants = list(VARIANTS)[:2] if smoke else list(VARIANTS)    # order of Table I: M-W, M-D, F-E, F-C, F-CM, F-X
+    variants = variant_ids(smoke)                                 # order of Table I: M-W, M-D, F-E, F-C, F-CM, F-X
     mx = 40 if smoke else None
     n_boot = 50 if smoke else int(cfg["probes"]["bootstrap"])
     if smoke and kind == "mlp":
         cfg = {**cfg, "probes": {**cfg["probes"], "mlp": {**cfg["probes"]["mlp"], "epochs": 3, "weight_decays": [1e-3, 1e-2]}}}
     store = TokenStore(cfg)
     lab = np.load(cfg["paths"]["output"] / "cell_labels.npz")
-    cb = cell_blocks(region_grid(cfg, "wac"), lab["cls"].shape, int(cfg["tiling"]["cell_px"]), cfg["region"],
-                     float(cfg["split"]["block_deg"]))
+    cb = region_cell_blocks(cfg, lab["cls"].shape)
     out, scores, ref_idx = {}, {}, None                          # keyed by (variant, setting)
     for vid in variants:
         t0 = time.perf_counter()
@@ -445,7 +449,7 @@ def fused_samples(cfg: dict, store: TokenStore, vid: str, idx: dict, missing: st
     with torch.no_grad():
         for s in range(0, rows.size, batch):
             r = rows[s:s + batch]
-            tok = {m: torch.from_numpy(np.asarray(store.caches[m][r], dtype=np.float32)).to(device) for m in MODALITIES}
+            tok = store.modality_tokens(r, device)
             masks = {m: torch.ones(r.size, n_tok, dtype=torch.bool, device=device) if m == missing else None for m in MODALITIES}
             maps[s:s + r.size] = enc(tok, masks).cpu().numpy()
     return maps[np.searchsorted(rows, idx["row"]), idx["i"], idx["j"]]
@@ -464,8 +468,7 @@ def run_missing(cfg: dict, device: str = "cuda", smoke: bool = False) -> dict:
     qg1, qg3 = load_report(cfg, "QG1")["variants"], load_report(cfg, "QG3")["variants"]
     store = TokenStore(cfg)
     lab = np.load(cfg["paths"]["output"] / "cell_labels.npz")
-    cb = cell_blocks(region_grid(cfg, "wac"), lab["cls"].shape, int(cfg["tiling"]["cell_px"]), cfg["region"],
-                     float(cfg["split"]["block_deg"]))
+    cb = region_cell_blocks(cfg, lab["cls"].shape)
     t = lambda a: torch.from_numpy(np.ascontiguousarray(a)).to(device)
     half = int(cfg["fusion"]["in_dim"])                               # F-C = [WAC 384, DEM 384]
     scores, checks, idx_te = {}, {}, None
@@ -474,11 +477,11 @@ def run_missing(cfg: dict, device: str = "cuda", smoke: bool = False) -> dict:
         y_tr = t(i_tr["cls"].astype(np.float32))
         # probes fitted on the complete S1-train data, C of QG1 / QG3
         xt = t(x_tr)
-        mu, sd = xt.mean(0), xt.std(0).clamp(min=1e-6)
+        mu, sd = standardise_stats(xt)
         w1, b1, _ = fit_logistic((xt - mu) / sd, y_tr, float(qg1[vid]["chosen_C"]))
         pmu, vec, _ = pca_fit(xt, int(d16[1:]))
         p_tr = (xt - pmu) @ vec
-        qmu, qsd = p_tr.mean(0), p_tr.std(0).clamp(min=1e-6)
+        qmu, qsd = standardise_stats(p_tr)
         w3, b3, _ = fit_logistic((p_tr - qmu) / qsd, y_tr, float(qg3[vid][d16]["chosen_C"]))
         probe = {"linear": lambda x: (((x - mu) / sd) @ w1 + b1).cpu().numpy(),
                  "pca16": lambda x: ((((x - pmu) @ vec) - qmu) / qsd @ w3 + b3).cpu().numpy()}
@@ -631,7 +634,6 @@ def run_terrain(cfg: dict, n_boot: int | None = None, save: bool = True) -> dict
 
 def selftest() -> None:
     """Weighted AP against scikit-learn; ``fit_logistic`` against scikit-learn on synthetic data."""
-    import torch
     from sklearn.metrics import average_precision_score
 
     rng = np.random.default_rng(0)

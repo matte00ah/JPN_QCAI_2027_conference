@@ -1,0 +1,4 @@
+# WAC_GLOBAL 100 m/px tiles of the study region R (30S-30N, 0-90E): 2 tiles, PDS3 .IMG with attached label (from https://data.lroc.im-ldi.com/lroc/view_rdr/WAC_GLOBAL)
+# the URLs redirect (HTTP 302) to pds.mcp.nasa.gov: follow redirects (wget default, curl -L)
+https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/BDR/WAC_GLOBAL/WAC_GLOBAL_E300N0450_100M.IMG
+https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/BDR/WAC_GLOBAL/WAC_GLOBAL_E300S0450_100M.IMG

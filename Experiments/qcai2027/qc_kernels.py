@@ -402,6 +402,16 @@ def qk_z_qiskit(d: int, reps: int = 1):
 FEATURE_MAPS = {"QK-A": qk_a, "QK-Z": qk_z, "QK-Z-qiskit": qk_z_qiskit}   # QI2.3 (QK-P) to add
 
 
+def map_reps(name: str, reps) -> list[int]:
+    """Repetitions to run for the feature map ``name``: QK-A has none (one layer), the others ``reps``."""
+    return [1] if name == "QK-A" else [int(r) for r in reps]
+
+
+def rep_suffix(name: str, r) -> str:
+    """Part of a result key that names the repetitions: empty for QK-A, ``_r<r>`` otherwise."""
+    return "" if name == "QK-A" else f"_r{int(r)}"
+
+
 def feature_map(name: str, d: int, reps: int = 1):
     """Parametrised circuit of the feature map ``name`` on d qubits (``reps`` repetitions for QK-Z);
     parameters = the d angles theta = c x."""
@@ -506,7 +516,7 @@ def run_zz(cfg: dict, n_pairs: int = 20, n_ref: int = 3) -> dict:
                     k = np.array([statevector_fidelity(qc, ta[p], tb[p]) for p in range(n_pairs)])
                     k_ref = np.array([statevector_fidelity(ref, ta[p], tb[p]) for p in range(n_ref)])
                     e[f"c{c:g}"] = {"max_abs_diff_qiskit_zz_feature_map": float(f"{np.abs(k[:n_ref] - k_ref).max():.1e}"),
-                                    "kernel_min_median_max": [float(f"{v:.3g}") for v in (k.min(), np.median(k), k.max())]}
+                                    "kernel_min_median_max": min_median_max(k)}
                 res[name] = e
             out[f"d{d}_r{r}"] = res
             print(f"QI2.2 d {d} r {r}: max |ours - zz_feature_map| "
@@ -565,6 +575,16 @@ def kernel_projected(ea: np.ndarray, eb: np.ndarray, gamma: float) -> np.ndarray
     return np.exp(-gamma * sq_distances(ea, eb))
 
 
+def min_median_max(v: np.ndarray) -> list[float]:
+    """[min, median, max] of ``v`` with 3 significant digits (report summaries of kernel values)."""
+    return [float(f"{t:.3g}") for t in (v.min(), np.median(v), v.max())]
+
+
+def projected_kernels(e_tr: np.ndarray, e_te: np.ndarray, gamma: float) -> tuple[np.ndarray, np.ndarray]:
+    """(K_train, K_test) of ``kernel_projected`` with width ``gamma``: training x training, test x training."""
+    return kernel_projected(e_tr, e_tr, gamma), kernel_projected(e_te, e_tr, gamma)
+
+
 def run_projected(cfg: dict, n_pairs: int = 20, n_ref: int = 3) -> dict:
     """QI2.3 report: per d, r (``quantum.zz_reps``) and c, on ``n_pairs`` random training-test pairs of real F-X
     angles (the same pairs as QI2.1-QI2.2): the largest |expectation - Qiskit ``expectation_value``| on ``n_ref``
@@ -578,7 +598,6 @@ def run_projected(cfg: dict, n_pairs: int = 20, n_ref: int = 3) -> dict:
     x_tr, _, x_te, _ = load_qk(cfg, "F-X", n, seed)
     rng = np.random.default_rng(int(cfg["seed"]))
     i, j = rng.integers(0, x_tr.shape[0], n_pairs), rng.integers(0, x_te.shape[0], n_pairs)
-    stats = lambda v: [float(f"{t:.3g}") for t in (v.min(), np.median(v), v.max())]
     out = {}
     for d in dims:
         a_tr, a_te = reduce_features(x_tr, d, x_te)
@@ -595,7 +614,7 @@ def run_projected(cfg: dict, n_pairs: int = 20, n_ref: int = 3) -> dict:
                 res[f"c{c:g}"] = {"max_abs_diff_expectations_qiskit": float(f"{np.abs(e_tr[:n_ref] - ref).max():.1e}"),
                                   "max_bloch_length": round(float(np.linalg.norm(e_tr.reshape(n_pairs, d, 3), axis=2).max()), 6),
                                   "median_gamma": float(f"{g0:.3g}"),
-                                  "projected_kernel_s1_min_median_max": stats(kp), "fidelity_kernel_min_median_max": stats(kf)}
+                                  "projected_kernel_s1_min_median_max": min_median_max(kp), "fidelity_kernel_min_median_max": min_median_max(kf)}
             out[f"d{d}_r{r}"] = res
             print(f"QI2.3 d {d} r {r}: max |exp - qiskit| "
                   f"{max(v['max_abs_diff_expectations_qiskit'] for v in res.values()):.1e}, median projected / fidelity c 1: "
@@ -793,7 +812,7 @@ def run_exact(cfg: dict, device: str = "cuda", n_ref: int = 3, n_prec: int = 200
                              "min_eigenvalue_k_train": float(f"{np.linalg.eigvalsh((k_tr + k_tr.T) / 2).min():.1e}"),
                              "offdiag_mean_c0.2": float(f"{off.mean():.3g}")}
             sync(); t0 = time.time()
-            e_tr, e_te = projected_features(th_tr, r, device), projected_features(th_te, r, device)
+            projected_features(th_tr, r, device), projected_features(th_te, r, device)          # timed only
             sync()
             res["QK-P"] = {"seconds_features_4000_states": round(time.time() - t0, 2)}
             out[f"d{d}_r{r}"] = res
@@ -875,7 +894,7 @@ def run_verify(cfg: dict) -> dict:
     for d in dims:
         a_tr, a_te = reduce_features(x_tr, d, x_te)
         for name in ("QK-A", "QK-Z", "QK-Z-qiskit"):
-            for r in ([1] if name == "QK-A" else reps):
+            for r in map_reps(name, reps):
                 res = {}
                 for c in cs:
                     ta, tb = feature_angles(a_tr[i], c), feature_angles(a_te[j], c)
@@ -892,7 +911,7 @@ def run_verify(cfg: dict) -> dict:
                         worst["within_4sigma"] = min(worst["within_4sigma"], e[f"N{N}"]["share_within_4sigma"])
                     worst["exact"] = max(worst["exact"], e["max_abs_diff_exact"])
                     res[f"c{c:g}"] = e
-                out[f"{name}_d{d}" + ("" if name == "QK-A" else f"_r{r}")] = res
+                out[f"{name}_d{d}{rep_suffix(name, r)}"] = res
                 print(f"QI3.2 {name} d {d} r {r}: max |K - P0| exact "
                       f"{max(v['max_abs_diff_exact'] for v in res.values()):.1e}, min share within 4 sigma "
                       f"{min(v[f'N{N}']['share_within_4sigma'] for v in res.values() for N in shots)}", flush=True)
@@ -949,7 +968,7 @@ def noisy_kernels(name: str, exact: tuple, shots: int, rng, gamma_scale: float =
     if name == "QK-P":
         e_tr, e_te = (shot_expectations(e, shots, rng) for e in exact)
         g = gamma_scale * median_gamma(e_tr)
-        k_tr, k_te = kernel_projected(e_tr, e_tr, g), kernel_projected(e_te, e_tr, g)
+        k_tr, k_te = projected_kernels(e_tr, e_te, g)
     else:
         k_tr, k_te = shot_kernel(exact[0], shots, rng, symmetric=True), shot_kernel(exact[1], shots, rng)
     k_tr, info = psd_project(k_tr)
@@ -979,7 +998,7 @@ def run_shots(cfg: dict, device: str = "cuda") -> dict:
                 if name == "QK-P":
                     exact = (projected_features(th_tr, r, device), projected_features(th_te, r, device))
                     g0 = median_gamma(exact[0])
-                    k_ex = (kernel_projected(exact[0], exact[0], g0), kernel_projected(exact[1], exact[0], g0))
+                    k_ex = projected_kernels(exact[0], exact[1], g0)
                 else:
                     exact = k_ex = fidelity_kernels(name, th_tr, th_te, r, device)
                 e = {"exact_offdiag_mean": float(f"{k_ex[0][off].mean():.3g}")}
@@ -993,7 +1012,7 @@ def run_shots(cfg: dict, device: str = "cuda") -> dict:
                                   "min_eigenvalue_before_psd": float(f"{info['min_eigenvalue']:.3g}"),
                                   "clipped_mass_share": float(f"{info['clipped_mass_share']:.3g}")}
                 res[f"c{c:g}"] = e
-            key = f"{name}_d{d}" + ("" if name == "QK-A" else f"_r{r}")
+            key = f"{name}_d{d}{rep_suffix(name, r)}"
             out[key] = res
             print(f"QI3.3 {key}: rel. error train N {shots[0]} / {shots[-1]} at c 0.2: "
                   f"{res['c0.2'][f'N{shots[0]}']['rel_frobenius_error_train_psd']} / {res['c0.2'][f'N{shots[-1]}']['rel_frobenius_error_train_psd']}", flush=True)
@@ -1033,7 +1052,7 @@ def run_simtime(cfg: dict, budget_s: float = 60.0) -> dict:
 
     def timed(fn, cap):
         """Seconds per state of ``fn(k)`` (computes k states), doubling k from 2 until ``budget_s`` or ``cap``."""
-        k, per = 2, None
+        k = 2
         while True:
             t0 = time.time()
             fn(k)
@@ -1062,7 +1081,6 @@ def run_simtime(cfg: dict, budget_s: float = 60.0) -> dict:
 
             aer_per, aer_k = timed(aer, 256)
             fast = zz_states(torch.as_tensor(th[:1]), r).numpy()[0]
-            per = {"statevector": sv_per, "aer": aer_per}
             states = {"qi31_check": 2 * 2 * n_test, "qi43_grid": n_c * n_seeds * (n + n_test),
                       "qi43_grid_cv_refit": n_c * n_seeds * (n + n_test + 5 * n)}
             for key, m in states.items():

@@ -14,7 +14,9 @@ dinov2   QA3.3: the DINOv2 ViT-S/14 weights of ``timm`` (load, size, token grid
 data     QA2.1 + QA2.2: valid coverage of the products of R (from the inventory
          diagnostics ``data_valid_coverage.csv``) and integrity of the copies in
          ``Dataset/Moon`` against the full-project dataset (size, and MD5 unless
-         ``--no-md5``).  -> section QA2
+         ``--no-md5``); without the full-project dataset (``paths.source_root``
+         missing from the config or not on disk) the files are only listed with
+         their size and MD5.  -> section QA2
 catalog  QA3.1: Robbins catalogue: MD5, columns, ids, missing values, value
          ranges (units).  -> section QA3.1
 
@@ -93,6 +95,8 @@ def check_data(cfg: dict, with_md5: bool = True) -> dict:
                    for pid, v in coverage.items()}
 
     # QA2.2: every file of the products (data, label and the PDS4 .xml next to them) against the original
+    source = cfg["paths"].get("source_root")
+    source = source if source is not None and source.is_dir() else None     # full-project dataset available
     files = set()
     for pid in products:
         row = inventory[pid]
@@ -100,23 +104,28 @@ def check_data(cfg: dict, with_md5: bool = True) -> dict:
             files.add(row[key])
         stem = Path(row["data_file"])
         xml = stem.with_suffix(".xml")
-        if (cfg["paths"]["source_root"] / xml).exists():
+        if ((source or cfg["paths"]["dataset_root"]) / xml).exists():
             files.add(str(xml))
     copies = []
     for rel in sorted(files):
-        a, b = cfg["paths"]["dataset_root"] / rel, cfg["paths"]["source_root"] / rel
-        rec = {"file": rel, "size": a.stat().st_size, "size_original": b.stat().st_size}
-        rec["size_ok"] = rec["size"] == rec["size_original"]
+        a = cfg["paths"]["dataset_root"] / rel
+        rec = {"file": rel, "size": a.stat().st_size}
+        if source is not None:
+            rec["size_original"] = (source / rel).stat().st_size
+            rec["size_ok"] = rec["size"] == rec["size_original"]
         if with_md5:
-            rec["md5"], rec["md5_original"] = md5sum(a), md5sum(b)
-            rec["md5_ok"] = rec["md5"] == rec["md5_original"]
+            rec["md5"] = md5sum(a)
+            if source is not None:
+                rec["md5_original"] = md5sum(source / rel)
+                rec["md5_ok"] = rec["md5"] == rec["md5_original"]
         copies.append(rec)
     out = {
         "region": reg, "coverage_source": str(cfg["paths"]["valid_coverage"]),
         "coverage_summary": cov_summary, "coverage": coverage,
         "all_bands_fully_valid": all(s["bands"] > 0 and s["min_valid_fraction"] == 1.0 for s in cov_summary.values()),
         "copies": copies, "n_files": len(copies),
-        "all_copies_identical": all(c["size_ok"] and c.get("md5_ok", True) for c in copies),
+        "all_copies_identical": (all(c["size_ok"] and c.get("md5_ok", True) for c in copies)
+                                 if source is not None else None),           # None: no originals to compare with
         "md5_checked": with_md5,
     }
     save_report(cfg, "QA2", out)

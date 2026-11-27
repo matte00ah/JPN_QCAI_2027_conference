@@ -3,8 +3,8 @@
   "_meta": {
    "step": "QK1",
    "script": "qc_noise.py",
-   "command": "summary",
-   "time": "2026-11-25T10:11:01",
+   "command": "run",
+   "time": "2026-11-25T13:48:19",
    "config_md5": "f2b66f4ed21b5fe3acf73802ac1fe80f"
   },
   "variant": "F-X",
@@ -225,7 +225,7 @@
      "f1": 0.6809,
      "precision": 0.7273,
      "recall": 0.64,
-     "ap": 0.7941
+     "ap": 0.7939
     },
     "shots_N4096": {
      "rel_frobenius_error_train_psd": 0.0024,
@@ -244,6 +244,95 @@
      "prediction_agreement_with_exact": 0.94
     }
    },
+   "FakeSherbrooke_d12": {
+    "circuit": {
+     "depth": 188,
+     "two_qubit_gates": 42,
+     "gates": 374,
+     "ops": {
+      "rz": 208,
+      "sx": 111,
+      "ecr": 42,
+      "x": 13,
+      "measure": 12
+     },
+     "physical_qubits": [
+      126,
+      125,
+      124,
+      123,
+      122,
+      121,
+      120,
+      119,
+      118,
+      110,
+      100,
+      101
+     ]
+    },
+    "device_noise": {
+     "rel_frobenius_error_train_psd": 0.2964,
+     "rel_frobenius_error_test": 0.3077,
+     "offdiag_mean_train": 0.2729,
+     "mean_test": 0.3172,
+     "fit_slope_a": 0.6685,
+     "fit_intercept_b": 0.01244,
+     "depolarising_b_expected": 8e-05,
+     "min_eigenvalue_before_psd": 0.262,
+     "eigenvalues_clipped": 0,
+     "f1": 0.7273,
+     "precision": 0.7347,
+     "recall": 0.72,
+     "ap": 0.7893,
+     "measured_diagonal_mean": 0.6662,
+     "prediction_agreement_with_exact": 0.97
+    }
+   },
+   "FakeFez_d12": {
+    "circuit": {
+     "depth": 200,
+     "two_qubit_gates": 42,
+     "gates": 316,
+     "ops": {
+      "rz": 166,
+      "sx": 108,
+      "cz": 42,
+      "measure": 12
+     },
+     "physical_qubits": [
+      140,
+      141,
+      142,
+      143,
+      136,
+      123,
+      124,
+      125,
+      126,
+      127,
+      137,
+      147
+     ]
+    },
+    "device_noise": {
+     "rel_frobenius_error_train_psd": 0.173,
+     "rel_frobenius_error_test": 0.1796,
+     "offdiag_mean_train": 0.3216,
+     "mean_test": 0.375,
+     "fit_slope_a": 0.8079,
+     "fit_intercept_b": 0.00679,
+     "depolarising_b_expected": 5e-05,
+     "min_eigenvalue_before_psd": 0.126,
+     "eigenvalues_clipped": 0,
+     "f1": 0.7475,
+     "precision": 0.7551,
+     "recall": 0.74,
+     "ap": 0.7923,
+     "measured_diagonal_mean": 0.81,
+     "prediction_agreement_with_exact": 0.97
+    }
+   },
    "d12": {
     "c": 0.2,
     "C": 1.0,
@@ -255,7 +344,7 @@
      "offdiag_mean_train": 0.3897,
      "mean_test": 0.4558,
      "fit_slope_a": 1.0,
-     "fit_intercept_b": 0.0,
+     "fit_intercept_b": -0.0,
      "depolarising_b_expected": 0.0,
      "min_eigenvalue_before_psd": 0.0131,
      "eigenvalues_clipped": 0,
@@ -283,10 +372,12 @@
    }
   },
   "checks": {
-   "FakeSherbrooke_d4_transpiled_vs_exact_max_abs_diff": 4e-15,
-   "FakeFez_d4_transpiled_vs_exact_max_abs_diff": 5.6e-16,
-   "FakeSherbrooke_d8_transpiled_vs_exact_max_abs_diff": 5.9e-15,
-   "FakeFez_d8_transpiled_vs_exact_max_abs_diff": 1.2e-15,
+   "FakeSherbrooke_d4_transpiled_vs_exact_max_abs_diff": 3e-15,
+   "FakeFez_d4_transpiled_vs_exact_max_abs_diff": 7.8e-16,
+   "FakeSherbrooke_d8_transpiled_vs_exact_max_abs_diff": 6.1e-15,
+   "FakeFez_d8_transpiled_vs_exact_max_abs_diff": 1.1e-15,
+   "FakeSherbrooke_d12_transpiled_vs_exact_max_abs_diff": 5.9e-15,
+   "FakeFez_d12_transpiled_vs_exact_max_abs_diff": 5.6e-16,
    "transpiled_below_1e-8": true
   },
   "note": "K = share of all-zero outcomes of U(x) U(x')^+ transpiled once per device and d (angles as parameters) on AerSimulator.from_backend(fake backend); training diagonal set to 1 (measured_diagonal_mean = the measured one); training matrix projected on the PSD cone before the SVM, test matrix as estimated; c, C from the QI4.2 CV on the exact kernel, the same for every estimate; fit = least squares K_est = a K + b on the off-diagonal training and the test values, depolarising_b_expected = (1 - a) / 2^d; no idle-time noise (circuits not scheduled)"
@@ -295,8 +386,8 @@
   "_meta": {
    "step": "QK2",
    "script": "qc_noise.py",
-   "command": "summary",
-   "time": "2026-11-25T10:11:01",
+   "command": "run",
+   "time": "2026-11-25T13:48:19",
    "config_md5": "f2b66f4ed21b5fe3acf73802ac1fe80f"
   },
   "variant": "F-X",
@@ -388,8 +479,950 @@
      "measured_diagonal_mean": 0.9289,
      "prediction_agreement_with_exact": 0.79
     }
+   },
+   "FakeSherbrooke_d12": {
+    "readout_error_mean": 0.0111,
+    "mitigated": {
+     "rel_frobenius_error_train_psd": 0.2101,
+     "rel_frobenius_error_test": 0.2182,
+     "offdiag_mean_train": 0.3074,
+     "mean_test": 0.3579,
+     "fit_slope_a": 0.7632,
+     "fit_intercept_b": 0.00996,
+     "depolarising_b_expected": 6e-05,
+     "min_eigenvalue_before_psd": 0.16,
+     "eigenvalues_clipped": 0,
+     "f1": 0.7273,
+     "precision": 0.7347,
+     "recall": 0.72,
+     "ap": 0.7907,
+     "measured_diagonal_mean": 0.7578,
+     "prediction_agreement_with_exact": 0.97
+    }
+   },
+   "FakeFez_d12": {
+    "readout_error_mean": 0.0073,
+    "mitigated": {
+     "rel_frobenius_error_train_psd": 0.1115,
+     "rel_frobenius_error_test": 0.1155,
+     "offdiag_mean_train": 0.3462,
+     "mean_test": 0.4042,
+     "fit_slope_a": 0.8776,
+     "fit_intercept_b": 0.0042,
+     "depolarising_b_expected": 3e-05,
+     "min_eigenvalue_before_psd": 0.052,
+     "eigenvalues_clipped": 0,
+     "f1": 0.7475,
+     "precision": 0.7551,
+     "recall": 0.74,
+     "ap": 0.7915,
+     "measured_diagonal_mean": 0.8778,
+     "prediction_agreement_with_exact": 0.97
+    }
    }
   },
   "note": "M3 (mthree) calibrated on the measured physical qubits with 10,000 shots on the same noisy simulator (calibration not seeded), apply_correction on the same counts as QK1, all-zero quasi-probability clipped to [0, 1]; readout_error_mean = mean over the qubits of 1 - trace / 2 of the calibration matrix"
+ },
+ "QK3": {
+  "_meta": {
+   "step": "QK3",
+   "script": "qc_noise.py",
+   "command": "resources",
+   "time": "2026-11-25T16:17:53",
+   "config_md5": "2643f7c4034b658de1ef905ab72ea857"
+  },
+  "devices": {
+   "FakeSherbrooke": {
+    "processor": "Eagle r3",
+    "rep_delay_us": 250.0,
+    "clops_h": 30000
+   },
+   "FakeFez": {
+    "processor": "Heron r2",
+    "rep_delay_us": 250.0,
+    "clops_h": 195000
+   }
+  },
+  "shots_per_circuit": 1024,
+  "test_candidates": 2000,
+  "optimization_level": 3,
+  "circuits": {
+   "FakeSherbrooke_QK-A_d4": {
+    "qubits": 4,
+    "depth": 7,
+    "two_qubit_gates": 0,
+    "two_qubit_layers": 0,
+    "duration_us": 1.33
+   },
+   "FakeSherbrooke_QK-A_d8": {
+    "qubits": 8,
+    "depth": 7,
+    "two_qubit_gates": 0,
+    "two_qubit_layers": 0,
+    "duration_us": 1.33
+   },
+   "FakeSherbrooke_QK-A_d12": {
+    "qubits": 12,
+    "depth": 7,
+    "two_qubit_gates": 0,
+    "two_qubit_layers": 0,
+    "duration_us": 1.33
+   },
+   "FakeSherbrooke_QK-A_d16": {
+    "qubits": 16,
+    "depth": 7,
+    "two_qubit_gates": 0,
+    "two_qubit_layers": 0,
+    "duration_us": 1.33
+   },
+   "FakeSherbrooke_QK-A_d20": {
+    "qubits": 20,
+    "depth": 7,
+    "two_qubit_gates": 0,
+    "two_qubit_layers": 0,
+    "duration_us": 1.33
+   },
+   "FakeSherbrooke_QK-Z_r1_d4": {
+    "qubits": 4,
+    "depth": 64,
+    "two_qubit_gates": 10,
+    "two_qubit_layers": 10,
+    "duration_us": 7.74
+   },
+   "FakeSherbrooke_QK-Z_r1_d8": {
+    "qubits": 8,
+    "depth": 122,
+    "two_qubit_gates": 26,
+    "two_qubit_layers": 26,
+    "duration_us": 17.07
+   },
+   "FakeSherbrooke_QK-Z_r1_d12": {
+    "qubits": 12,
+    "depth": 188,
+    "two_qubit_gates": 42,
+    "two_qubit_layers": 42,
+    "duration_us": 26.69
+   },
+   "FakeSherbrooke_QK-Z_r1_d16": {
+    "qubits": 16,
+    "depth": 273,
+    "two_qubit_gates": 58,
+    "two_qubit_layers": 58,
+    "duration_us": 36.81
+   },
+   "FakeSherbrooke_QK-Z_r1_d20": {
+    "qubits": 20,
+    "depth": 340,
+    "two_qubit_gates": 74,
+    "two_qubit_layers": 74,
+    "duration_us": 46.37
+   },
+   "FakeSherbrooke_QK-Z_r2_d4": {
+    "qubits": 4,
+    "depth": 116,
+    "two_qubit_gates": 22,
+    "two_qubit_layers": 18,
+    "duration_us": 13.03
+   },
+   "FakeSherbrooke_QK-Z_r2_d8": {
+    "qubits": 8,
+    "depth": 172,
+    "two_qubit_gates": 54,
+    "two_qubit_layers": 34,
+    "duration_us": 22.31
+   },
+   "FakeSherbrooke_QK-Z_r2_d12": {
+    "qubits": 12,
+    "depth": 254,
+    "two_qubit_gates": 86,
+    "two_qubit_layers": 50,
+    "duration_us": 32.32
+   },
+   "FakeSherbrooke_QK-Z_r2_d16": {
+    "qubits": 16,
+    "depth": 322,
+    "two_qubit_gates": 118,
+    "two_qubit_layers": 66,
+    "duration_us": 41.93
+   },
+   "FakeSherbrooke_QK-Z_r2_d20": {
+    "qubits": 20,
+    "depth": 394,
+    "two_qubit_gates": 150,
+    "two_qubit_layers": 82,
+    "duration_us": 51.66
+   },
+   "FakeSherbrooke_QK-P_r1_d4": {
+    "qubits": 4,
+    "depth": 40,
+    "two_qubit_gates": 6,
+    "two_qubit_layers": 6,
+    "duration_us": 5.16
+   },
+   "FakeSherbrooke_QK-P_r1_d8": {
+    "qubits": 8,
+    "depth": 76,
+    "two_qubit_gates": 14,
+    "two_qubit_layers": 14,
+    "duration_us": 9.88
+   },
+   "FakeSherbrooke_QK-P_r1_d12": {
+    "qubits": 12,
+    "depth": 107,
+    "two_qubit_gates": 22,
+    "two_qubit_layers": 22,
+    "duration_us": 14.6
+   },
+   "FakeSherbrooke_QK-P_r1_d16": {
+    "qubits": 16,
+    "depth": 152,
+    "two_qubit_gates": 30,
+    "two_qubit_layers": 30,
+    "duration_us": 19.61
+   },
+   "FakeSherbrooke_QK-P_r1_d20": {
+    "qubits": 20,
+    "depth": 184,
+    "two_qubit_gates": 38,
+    "two_qubit_layers": 38,
+    "duration_us": 24.38
+   },
+   "FakeSherbrooke_QK-P_r2_d4": {
+    "qubits": 4,
+    "depth": 66,
+    "two_qubit_gates": 12,
+    "two_qubit_layers": 10,
+    "duration_us": 7.8
+   },
+   "FakeSherbrooke_QK-P_r2_d8": {
+    "qubits": 8,
+    "depth": 100,
+    "two_qubit_gates": 28,
+    "two_qubit_layers": 18,
+    "duration_us": 12.41
+   },
+   "FakeSherbrooke_QK-P_r2_d12": {
+    "qubits": 12,
+    "depth": 132,
+    "two_qubit_gates": 44,
+    "two_qubit_layers": 26,
+    "duration_us": 17.3
+   },
+   "FakeSherbrooke_QK-P_r2_d16": {
+    "qubits": 16,
+    "depth": 179,
+    "two_qubit_gates": 60,
+    "two_qubit_layers": 34,
+    "duration_us": 22.19
+   },
+   "FakeSherbrooke_QK-P_r2_d20": {
+    "qubits": 20,
+    "depth": 213,
+    "two_qubit_gates": 76,
+    "two_qubit_layers": 42,
+    "duration_us": 26.97
+   },
+   "FakeFez_QK-A_d4": {
+    "qubits": 4,
+    "depth": 7,
+    "two_qubit_gates": 0,
+    "two_qubit_layers": 0,
+    "duration_us": 1.61
+   },
+   "FakeFez_QK-A_d8": {
+    "qubits": 8,
+    "depth": 7,
+    "two_qubit_gates": 0,
+    "two_qubit_layers": 0,
+    "duration_us": 1.61
+   },
+   "FakeFez_QK-A_d12": {
+    "qubits": 12,
+    "depth": 7,
+    "two_qubit_gates": 0,
+    "two_qubit_layers": 0,
+    "duration_us": 1.61
+   },
+   "FakeFez_QK-A_d16": {
+    "qubits": 16,
+    "depth": 7,
+    "two_qubit_gates": 0,
+    "two_qubit_layers": 0,
+    "duration_us": 1.61
+   },
+   "FakeFez_QK-A_d20": {
+    "qubits": 20,
+    "depth": 7,
+    "two_qubit_gates": 0,
+    "two_qubit_layers": 0,
+    "duration_us": 1.61
+   },
+   "FakeFez_QK-Z_r1_d4": {
+    "qubits": 4,
+    "depth": 56,
+    "two_qubit_gates": 10,
+    "two_qubit_layers": 10,
+    "duration_us": 2.83
+   },
+   "FakeFez_QK-Z_r1_d8": {
+    "qubits": 8,
+    "depth": 128,
+    "two_qubit_gates": 26,
+    "two_qubit_layers": 26,
+    "duration_us": 4.75
+   },
+   "FakeFez_QK-Z_r1_d12": {
+    "qubits": 12,
+    "depth": 200,
+    "two_qubit_gates": 42,
+    "two_qubit_layers": 42,
+    "duration_us": 6.67
+   },
+   "FakeFez_QK-Z_r1_d16": {
+    "qubits": 16,
+    "depth": 272,
+    "two_qubit_gates": 58,
+    "two_qubit_layers": 58,
+    "duration_us": 8.59
+   },
+   "FakeFez_QK-Z_r1_d20": {
+    "qubits": 20,
+    "depth": 344,
+    "two_qubit_gates": 74,
+    "two_qubit_layers": 74,
+    "duration_us": 10.51
+   },
+   "FakeFez_QK-Z_r2_d4": {
+    "qubits": 4,
+    "depth": 98,
+    "two_qubit_gates": 22,
+    "two_qubit_layers": 18,
+    "duration_us": 3.84
+   },
+   "FakeFez_QK-Z_r2_d8": {
+    "qubits": 8,
+    "depth": 170,
+    "two_qubit_gates": 54,
+    "two_qubit_layers": 34,
+    "duration_us": 5.76
+   },
+   "FakeFez_QK-Z_r2_d12": {
+    "qubits": 12,
+    "depth": 242,
+    "two_qubit_gates": 86,
+    "two_qubit_layers": 50,
+    "duration_us": 7.68
+   },
+   "FakeFez_QK-Z_r2_d16": {
+    "qubits": 16,
+    "depth": 314,
+    "two_qubit_gates": 118,
+    "two_qubit_layers": 66,
+    "duration_us": 9.6
+   },
+   "FakeFez_QK-Z_r2_d20": {
+    "qubits": 20,
+    "depth": 386,
+    "two_qubit_gates": 150,
+    "two_qubit_layers": 82,
+    "duration_us": 11.52
+   },
+   "FakeFez_QK-P_r1_d4": {
+    "qubits": 4,
+    "depth": 34,
+    "two_qubit_gates": 6,
+    "two_qubit_layers": 6,
+    "duration_us": 2.33
+   },
+   "FakeFez_QK-P_r1_d8": {
+    "qubits": 8,
+    "depth": 70,
+    "two_qubit_gates": 14,
+    "two_qubit_layers": 14,
+    "duration_us": 3.29
+   },
+   "FakeFez_QK-P_r1_d12": {
+    "qubits": 12,
+    "depth": 106,
+    "two_qubit_gates": 22,
+    "two_qubit_layers": 22,
+    "duration_us": 4.25
+   },
+   "FakeFez_QK-P_r1_d16": {
+    "qubits": 16,
+    "depth": 142,
+    "two_qubit_gates": 30,
+    "two_qubit_layers": 30,
+    "duration_us": 5.21
+   },
+   "FakeFez_QK-P_r1_d20": {
+    "qubits": 20,
+    "depth": 178,
+    "two_qubit_gates": 38,
+    "two_qubit_layers": 38,
+    "duration_us": 6.17
+   },
+   "FakeFez_QK-P_r2_d4": {
+    "qubits": 4,
+    "depth": 55,
+    "two_qubit_gates": 12,
+    "two_qubit_layers": 10,
+    "duration_us": 2.83
+   },
+   "FakeFez_QK-P_r2_d8": {
+    "qubits": 8,
+    "depth": 91,
+    "two_qubit_gates": 28,
+    "two_qubit_layers": 18,
+    "duration_us": 3.79
+   },
+   "FakeFez_QK-P_r2_d12": {
+    "qubits": 12,
+    "depth": 127,
+    "two_qubit_gates": 44,
+    "two_qubit_layers": 26,
+    "duration_us": 4.75
+   },
+   "FakeFez_QK-P_r2_d16": {
+    "qubits": 16,
+    "depth": 163,
+    "two_qubit_gates": 60,
+    "two_qubit_layers": 34,
+    "duration_us": 5.71
+   },
+   "FakeFez_QK-P_r2_d20": {
+    "qubits": 20,
+    "depth": 199,
+    "two_qubit_gates": 76,
+    "two_qubit_layers": 42,
+    "duration_us": 6.67
+   }
+  },
+  "runs": {
+   "QK-A_d4_n500": {
+    "r_chosen": null,
+    "training_circuits": 124750,
+    "inference_circuits": 746800,
+    "total_shots": 892000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 224000.0,
+     "clops_s": 29700.0
+    },
+    "FakeFez": {
+     "physical_s": 225000.0,
+     "clops_s": 4580.0
+    }
+   },
+   "QK-A_d8_n500": {
+    "r_chosen": null,
+    "training_circuits": 124750,
+    "inference_circuits": 808000,
+    "total_shots": 955000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 240000.0,
+     "clops_s": 31800.0
+    },
+    "FakeFez": {
+     "physical_s": 241000.0,
+     "clops_s": 4900.0
+    }
+   },
+   "QK-A_d12_n500": {
+    "r_chosen": null,
+    "training_circuits": 124750,
+    "inference_circuits": 765600,
+    "total_shots": 912000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 229000.0,
+     "clops_s": 30400.0
+    },
+    "FakeFez": {
+     "physical_s": 229000.0,
+     "clops_s": 4680.0
+    }
+   },
+   "QK-A_d16_n100": {
+    "r_chosen": null,
+    "training_circuits": 4950,
+    "inference_circuits": 160400,
+    "total_shots": 169000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 42500.0,
+     "clops_s": 5640.0
+    },
+    "FakeFez": {
+     "physical_s": 42600.0,
+     "clops_s": 867.0
+    }
+   },
+   "QK-A_d16_n250": {
+    "r_chosen": null,
+    "training_circuits": 31125,
+    "inference_circuits": 418400,
+    "total_shots": 460000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 116000.0,
+     "clops_s": 15300.0
+    },
+    "FakeFez": {
+     "physical_s": 116000.0,
+     "clops_s": 2360.0
+    }
+   },
+   "QK-A_d16_n500": {
+    "r_chosen": null,
+    "training_circuits": 124750,
+    "inference_circuits": 776400,
+    "total_shots": 923000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 232000.0,
+     "clops_s": 30700.0
+    },
+    "FakeFez": {
+     "physical_s": 232000.0,
+     "clops_s": 4730.0
+    }
+   },
+   "QK-A_d16_n1000": {
+    "r_chosen": null,
+    "training_circuits": 499500,
+    "inference_circuits": 1484400,
+    "total_shots": 2030000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 510000.0,
+     "clops_s": 67700.0
+    },
+    "FakeFez": {
+     "physical_s": 511000.0,
+     "clops_s": 10400.0
+    }
+   },
+   "QK-A_d16_n2000": {
+    "r_chosen": null,
+    "training_circuits": 1999000,
+    "inference_circuits": 2657600,
+    "total_shots": 4770000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 1200000.0,
+     "clops_s": 159000.0
+    },
+    "FakeFez": {
+     "physical_s": 1200000.0,
+     "clops_s": 24500.0
+    }
+   },
+   "QK-A_d20_n500": {
+    "r_chosen": null,
+    "training_circuits": 124750,
+    "inference_circuits": 751200,
+    "total_shots": 897000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 225000.0,
+     "clops_s": 29900.0
+    },
+    "FakeFez": {
+     "physical_s": 226000.0,
+     "clops_s": 4600.0
+    }
+   },
+   "QK-P_d4_n500": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 1500,
+    "inference_circuits": 6000,
+    "total_shots": 7680000.0,
+    "FakeSherbrooke": {
+     "physical_s": 1970.0,
+     "clops_s": 2150.0
+    },
+    "FakeFez": {
+     "physical_s": 1940.0,
+     "clops_s": 331.0
+    }
+   },
+   "QK-P_d8_n500": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 1500,
+    "inference_circuits": 6000,
+    "total_shots": 7680000.0,
+    "FakeSherbrooke": {
+     "physical_s": 2010.0,
+     "clops_s": 4200.0
+    },
+    "FakeFez": {
+     "physical_s": 1950.0,
+     "clops_s": 646.0
+    }
+   },
+   "QK-P_d12_n500": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 1500,
+    "inference_circuits": 6000,
+    "total_shots": 7680000.0,
+    "FakeSherbrooke": {
+     "physical_s": 2040.0,
+     "clops_s": 6040.0
+    },
+    "FakeFez": {
+     "physical_s": 1950.0,
+     "clops_s": 928.0
+    }
+   },
+   "QK-P_d16_n100": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 300,
+    "inference_circuits": 6000,
+    "total_shots": 6450000.0,
+    "FakeSherbrooke": {
+     "physical_s": 1740.0,
+     "clops_s": 6620.0
+    },
+    "FakeFez": {
+     "physical_s": 1650.0,
+     "clops_s": 1020.0
+    }
+   },
+   "QK-P_d16_n250": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 750,
+    "inference_circuits": 6000,
+    "total_shots": 6910000.0,
+    "FakeSherbrooke": {
+     "physical_s": 1860.0,
+     "clops_s": 7090.0
+    },
+    "FakeFez": {
+     "physical_s": 1760.0,
+     "clops_s": 1090.0
+    }
+   },
+   "QK-P_d16_n500": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 1500,
+    "inference_circuits": 6000,
+    "total_shots": 7680000.0,
+    "FakeSherbrooke": {
+     "physical_s": 2080.0,
+     "clops_s": 8090.0
+    },
+    "FakeFez": {
+     "physical_s": 1960.0,
+     "clops_s": 1240.0
+    }
+   },
+   "QK-P_d16_n1000": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 3000,
+    "inference_circuits": 6000,
+    "total_shots": 9220000.0,
+    "FakeSherbrooke": {
+     "physical_s": 2490.0,
+     "clops_s": 9690.0
+    },
+    "FakeFez": {
+     "physical_s": 2350.0,
+     "clops_s": 1500.0
+    }
+   },
+   "QK-P_d16_n2000": {
+    "r_chosen": [
+     1
+    ],
+    "training_circuits": 6000,
+    "inference_circuits": 6000,
+    "total_shots": 12300000.0,
+    "FakeSherbrooke": {
+     "physical_s": 3310.0,
+     "clops_s": 12300.0
+    },
+    "FakeFez": {
+     "physical_s": 3140.0,
+     "clops_s": 1890.0
+    }
+   },
+   "QK-P_d20_n500": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 1500,
+    "inference_circuits": 6000,
+    "total_shots": 7680000.0,
+    "FakeSherbrooke": {
+     "physical_s": 2120.0,
+     "clops_s": 10200.0
+    },
+    "FakeFez": {
+     "physical_s": 1970.0,
+     "clops_s": 1560.0
+    }
+   },
+   "QK-Z_d4_n500": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 124750,
+    "inference_circuits": 803200,
+    "total_shots": 950000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 247000.0,
+     "clops_s": 410000.0
+    },
+    "FakeFez": {
+     "physical_s": 241000.0,
+     "clops_s": 63100.0
+    }
+   },
+   "QK-Z_d8_n500": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 124750,
+    "inference_circuits": 813600,
+    "total_shots": 961000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 258000.0,
+     "clops_s": 883000.0
+    },
+    "FakeFez": {
+     "physical_s": 245000.0,
+     "clops_s": 136000.0
+    }
+   },
+   "QK-Z_d12_n500": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 124750,
+    "inference_circuits": 804400,
+    "total_shots": 951000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 265000.0,
+     "clops_s": 1390000.0
+    },
+    "FakeFez": {
+     "physical_s": 245000.0,
+     "clops_s": 214000.0
+    }
+   },
+   "QK-Z_d16_n100": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 4950,
+    "inference_circuits": 163600,
+    "total_shots": 173000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 50000.0,
+     "clops_s": 360000.0
+    },
+    "FakeFez": {
+     "physical_s": 44700.0,
+     "clops_s": 55300.0
+    }
+   },
+   "QK-Z_d16_n250": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 31125,
+    "inference_circuits": 434000,
+    "total_shots": 476000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 137000.0,
+     "clops_s": 972000.0
+    },
+    "FakeFez": {
+     "physical_s": 123000.0,
+     "clops_s": 149000.0
+    }
+   },
+   "QK-Z_d16_n500": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 124750,
+    "inference_circuits": 775200,
+    "total_shots": 922000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 267000.0,
+     "clops_s": 1890000.0
+    },
+    "FakeFez": {
+     "physical_s": 239000.0,
+     "clops_s": 291000.0
+    }
+   },
+   "QK-Z_d16_n1000": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 499500,
+    "inference_circuits": 1534800,
+    "total_shots": 2080000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 600000.0,
+     "clops_s": 4130000.0
+    },
+    "FakeFez": {
+     "physical_s": 539000.0,
+     "clops_s": 636000.0
+    }
+   },
+   "QK-Z_d16_n2000": {
+    "r_chosen": [
+     1
+    ],
+    "training_circuits": 1999000,
+    "inference_circuits": 2660800,
+    "total_shots": 4770000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 1370000.0,
+     "clops_s": 9220000.0
+    },
+    "FakeFez": {
+     "physical_s": 1230000.0,
+     "clops_s": 1420000.0
+    }
+   },
+   "QK-Z_d20_n500": {
+    "r_chosen": [
+     1,
+     2
+    ],
+    "training_circuits": 124750,
+    "inference_circuits": 787200,
+    "total_shots": 934000000.0,
+    "FakeSherbrooke": {
+     "physical_s": 280000.0,
+     "clops_s": 2460000.0
+    },
+    "FakeFez": {
+     "physical_s": 244000.0,
+     "clops_s": 379000.0
+    }
+   }
+  },
+  "extrapolation": {
+   "d": 16,
+   "n": 500,
+   "owned_subtiles_R": 1900668,
+   "candidate_share": 0.3587,
+   "candidates_R": 681686,
+   "moon_over_R_area": 8.0,
+   "QK-A": {
+    "support_vectors_mean": 388.2,
+    "r": null,
+    "R": {
+     "kernel_circuits": 265000000.0,
+     "shots": 271000000000.0,
+     "FakeSherbrooke": {
+      "physical_s": 68100000.0,
+      "clops_s": 9040000.0
+     },
+     "FakeFez": {
+      "physical_s": 68200000.0,
+      "clops_s": 1390000.0
+     }
+    },
+    "moon": {
+     "kernel_circuits": 2120000000.0,
+     "shots": 2170000000000.0,
+     "FakeSherbrooke": {
+      "physical_s": 545000000.0,
+      "clops_s": 72300000.0
+     },
+     "FakeFez": {
+      "physical_s": 545000000.0,
+      "clops_s": 11100000.0
+     }
+    }
+   },
+   "QK-Z": {
+    "support_vectors_mean": 387.6,
+    "r": 1,
+    "R": {
+     "kernel_circuits": 264000000.0,
+     "shots": 271000000000.0,
+     "FakeSherbrooke": {
+      "physical_s": 77600000.0,
+      "clops_s": 523000000.0
+     },
+     "FakeFez": {
+      "physical_s": 70000000.0,
+      "clops_s": 80500000.0
+     }
+    },
+    "moon": {
+     "kernel_circuits": 2110000000.0,
+     "shots": 2160000000000.0,
+     "FakeSherbrooke": {
+      "physical_s": 621000000.0,
+      "clops_s": 4180000000.0
+     },
+     "FakeFez": {
+      "physical_s": 560000000.0,
+      "clops_s": 644000000.0
+     }
+    }
+   },
+   "QK-P": {
+    "support_vectors_mean": 379.8,
+    "r": 1,
+    "R": {
+     "kernel_circuits": 2050000.0,
+     "shots": 2100000000.0,
+     "FakeSherbrooke": {
+      "physical_s": 565000.0,
+      "clops_s": 2100000.0
+     },
+     "FakeFez": {
+      "physical_s": 535000.0,
+      "clops_s": 322000.0
+     }
+    },
+    "moon": {
+     "kernel_circuits": 16400000.0,
+     "shots": 16800000000.0,
+     "FakeSherbrooke": {
+      "physical_s": 4520000.0,
+      "clops_s": 16800000.0
+     },
+     "FakeFez": {
+      "physical_s": 4280000.0,
+      "clops_s": 2580000.0
+     }
+    }
+   }
+  },
+  "pipeline_reference": "~2e9 kernel evaluations for the whole Moon (~118,000 tiles x ~38 candidates x ~500 support vectors; pipeline section 'Quantum kernel development and validation')",
+  "note": "one kernel evaluation = one compute-uncompute circuit (QK-A, QK-Z) or, for QK-P, one of the 3 measurement circuits of a sample (largest reported); transpiled once with the angles as parameters (the counts do not depend on the angles: R_Z is virtual); duration = longest path with the gate and readout durations of the calibration; physical_s = shots x (duration + rep_delay), execution only at the default rep_delay; clops_s = circuits x shots x max(1, two-qubit layers) / CLOPS_h, an approximation (CLOPS_h is measured on full-width layers); times scale linearly with the shots per circuit; extrapolation: candidates = owned sub-tiles of R x stage-1 candidate share (QH3), whole Moon by the ratio of the areas (latitude-dependent crater density and polar coverage ignored)"
  }
 }

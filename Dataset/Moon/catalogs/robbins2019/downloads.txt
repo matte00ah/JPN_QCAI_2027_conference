@@ -1,0 +1,5 @@
+# Robbins (2019) lunar crater database, PDS4 bundle urn:nasa:pds:lunar_crater_database_robbins_2018 v1.0 (see SOURCE.md)
+# the URL serves a ZIP archive (~96 MB) without extension: unzip it and keep in this folder
+#   lunar_crater_database_robbins_2018.csv (MD5 13f2f9df2e71d7049e966ee405c7f014, checked by qc_checks.py catalog)
+#   lunar_crater_database_robbins_2018.xml (PDS4 label of the table)
+https://astrogeology.usgs.gov/ckan/dataset/f89f5478-b69a-486c-b9b5-30d7b0c5ad2b/resource/c4f25cc2-4f8a-4207-a845-5e176da3ac5a/download/lunar_crater_database_robbins_2018

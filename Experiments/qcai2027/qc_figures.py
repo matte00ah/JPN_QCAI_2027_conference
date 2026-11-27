@@ -71,14 +71,11 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from qc_data import (CONFIG_PATH, MOON_RADIUS_M, SETS, block_area_km2, load_config, load_report,  # noqa: E402
-                     read_region, region_layout, save_report, written)
+from qc_data import (CONFIG_PATH, SETS, block_area_km2, load_config, load_report,  # noqa: E402
+                     pixel_km, read_region, region_grid, region_layout, save_report, written)
 
-# (name, crater_id at the centre of the crop or None, centre row, centre col, size px, title)
-OVERLAY_CROPS = [
-    ("theophilus", "07-1-000385", None, None, 1800, "Theophilus (D = 100 km) and surroundings"),
-    ("equator_seam", None, 9097, 15300, 600, "Mare area across the WAC seam at the equator (dashed)"),
-]
+# text style of the paper figures (7 pt, TrueType fonts in the PDF)
+PAPER_RC = {"font.size": 7, "axes.labelsize": 7, "xtick.labelsize": 6.5, "ytick.labelsize": 6.5, "pdf.fonttype": 42}
 
 
 # QB3.3: one hue per set family (first three slots of the categorical palette, which stay
@@ -150,11 +147,6 @@ def save_figure(fig, out: Path, pdf: bool = False, dpi: int = 300) -> None:
 def paper_path(cfg: dict, name: str) -> Path:
     """Figures and tables of the paper."""
     return cfg["paths"]["results"] / "paper" / name
-
-
-def pixel_km(grid) -> float:
-    """N-S pixel size (km) of an equirectangular grid."""
-    return 2 * math.pi * MOON_RADIUS_M / 360.0 / grid.ppd / 1000.0
 
 
 def style_axes(ax) -> None:
@@ -312,7 +304,7 @@ def run_tile_check(cfg: dict, n_tiles: int = 10, per_row: int = 2, d_min_km: flo
     craters = pd.read_csv(cfg["paths"]["output"] / "craters_R.csv")
     d_lo, d_hi = (float(x) for x in cfg["labels"]["diam_range_km"])
     tile_px, cell_px = reader.tile_px, reader.cell_px
-    px_km = pixel_km(region_layout(cfg, "wac").grid)
+    px_km = pixel_km(region_grid(cfg, "wac"))
     cand = tiles[tiles["kept"].to_numpy(bool) & reader.tile_used.ravel()]
     pick = cand.iloc[np.sort(np.random.default_rng(int(cfg["seed"])).choice(len(cand), n_tiles, replace=False))]
 
@@ -389,8 +381,7 @@ def run_region_map(cfg: dict, step: int = 8, width_in: float = 7.16, pdf: bool =
     g = src.grid
     wac = read_region(src, slice(0, None, step), slice(0, None, step))
     blocks = pd.read_csv(cfg["paths"]["output"] / "split_blocks.csv")
-    plt.rcParams.update({"font.size": 7, "axes.labelsize": 7, "xtick.labelsize": 6.5, "ytick.labelsize": 6.5,
-                         "pdf.fonttype": 42})
+    plt.rcParams.update(PAPER_RC)
 
     fig = plt.figure(figsize=(width_in, 3.55), facecolor=SURFACE)
     gs = fig.add_gridspec(1, 2, width_ratios=[3.55, 1.0], wspace=0.08)
@@ -479,8 +470,7 @@ def run_sfd(cfg: dict, fit_km: tuple[float, float] = (2.0, 8.0), d_max_plot_km: 
     edges = edges[edges <= 64.0]
     slopes = {f"{a:.2f}-{c:.2f}": float(np.log10(cum(c) / cum(a)) / np.log10(c / a)) for a, c in zip(edges[:-1], edges[1:])}
 
-    plt.rcParams.update({"font.size": 7, "axes.labelsize": 7, "xtick.labelsize": 6.5, "ytick.labelsize": 6.5,
-                         "pdf.fonttype": 42})
+    plt.rcParams.update(PAPER_RC)
     fig, (ax, rx) = plt.subplots(2, 1, figsize=(width_in, 3.4), sharex=True, facecolor=SURFACE,
                                  gridspec_kw={"height_ratios": [2.3, 1.0], "hspace": 0.08})
     sel = d <= d_max_plot_km
@@ -569,7 +559,7 @@ def run_example_tiles(cfg: dict, percentiles=(90, 50, 10), width_in: float = 7.1
     lab = np.load(cfg["paths"]["output"] / "cell_labels.npz")
     cls, band = lab["cls"], lab["band"]
     bands = [float(x) for x in lab["bands_km"]]
-    px_km = 2 * math.pi * MOON_RADIUS_M / 360.0 / region_layout(cfg, "wac").grid.ppd / 1000.0
+    px_km = pixel_km(region_grid(cfg, "wac"))
     k, s_c = tile_px // cell_px, stride_px // cell_px
 
     # positive owned sub-tiles of every used tile
@@ -770,7 +760,7 @@ def region_cell_corr(cfg: dict, azimuths: dict, strip_rows: int = 512) -> dict:
 
     cell_px = int(cfg["tiling"]["cell_px"])
     alt = float(cfg["derivatives"]["hillshade_altitude_deg"])
-    grid = region_layout(cfg, "wac").grid
+    grid = region_grid(cfg, "wac")
     wac = np.load(raster_path(cfg, "wac"), mmap_mode="r")
     dem = np.load(raster_path(cfg, "dem"), mmap_mode="r")
     nr, nc = wac.shape[0] // cell_px, wac.shape[1] // cell_px
@@ -797,7 +787,7 @@ def crater_visibility(cfg: dict, craters, rings: dict) -> "pd.DataFrame":
 
     wac = np.load(raster_path(cfg, "wac"), mmap_mode="r")
     relief = np.load(raster_path(cfg, "relief"), mmap_mode="r")
-    px_km = pixel_km(region_layout(cfg, "wac").grid)
+    px_km = pixel_km(region_grid(cfg, "wac"))
     lines, samples = wac.shape
     out_rho = rings["background"][1]
     z = np.full((len(craters), 2), np.nan)
@@ -841,15 +831,13 @@ def run_complementarity(cfg: dict, z_min: float = 2.0, z_sensitivity=(1.0, 3.0),
     import matplotlib.pyplot as plt
     import pandas as pd
     from matplotlib.colors import LinearSegmentedColormap
-    from matplotlib.lines import Line2D
-    from matplotlib.patches import Patch
 
     from qc_data import cell_blocks
     from qc_tiles import dataset_cells
 
     out_dir = cfg["paths"]["output"]
     reg, cell_px = cfg["region"], int(cfg["tiling"]["cell_px"])
-    grid = region_layout(cfg, "wac").grid
+    grid = region_grid(cfg, "wac")
     tiles = pd.read_csv(out_dir / "tiles.csv")
     blocks = pd.read_csv(out_dir / "split_blocks.csv")
     lab = np.load(out_dir / "cell_labels.npz")
@@ -913,7 +901,7 @@ def run_complementarity(cfg: dict, z_min: float = 2.0, z_sensitivity=(1.0, 3.0),
     }
 
     # figure: (a) map of the median r per tile, (b) histogram of r per sub-tile, (c) visibility per band
-    plt.rcParams.update({"font.size": 7, "axes.labelsize": 7, "xtick.labelsize": 6.5, "ytick.labelsize": 6.5, "pdf.fonttype": 42})
+    plt.rcParams.update(PAPER_RC)
     fig = plt.figure(figsize=(width_in, 2.9), facecolor=SURFACE)
     gs = fig.add_gridspec(1, 3, width_ratios=[2.0, 1.0, 0.9], wspace=0.5)
     ax, hx, vx = (fig.add_subplot(gs[k]) for k in range(3))
@@ -1007,7 +995,7 @@ def draw_token_check(cfg: dict, tiles: list) -> None:
     craters = pd.read_csv(cfg["paths"]["output"] / "craters_R.csv")
     tile_px, cell_px = int(cfg["tiling"]["tile_px"]), int(cfg["tiling"]["cell_px"])
     d_lo, d_hi = (float(x) for x in cfg["labels"]["diam_range_km"])
-    px_km = pixel_km(region_layout(cfg, "wac").grid)
+    px_km = pixel_km(region_grid(cfg, "wac"))
     ext = (-0.5, tile_px - 0.5, tile_px - 0.5, -0.5)
     cols = ["WAC 643 nm + catalogue craters", "PCA-RGB of the WAC tokens", "PCA-RGB of the DEM tokens"]
     fig, axes = plt.subplots(len(tiles), 3, figsize=(7.2, 2.45 * len(tiles) + 0.5), facecolor=SURFACE, squeeze=False)
@@ -1059,7 +1047,7 @@ def draw_attention_check(cfg: dict, tiles: list) -> None:
     craters = pd.read_csv(cfg["paths"]["output"] / "craters_R.csv")
     tile_px, cell_px = int(cfg["tiling"]["tile_px"]), int(cfg["tiling"]["cell_px"])
     d_lo, d_hi = (float(x) for x in cfg["labels"]["diam_range_km"])
-    px_km = pixel_km(region_layout(cfg, "wac").grid)
+    px_km = pixel_km(region_grid(cfg, "wac"))
     ext = (-0.5, tile_px - 0.5, tile_px - 0.5, -0.5)
     cmap = LinearSegmentedColormap.from_list("attn", [SURFACE, ATTENTION_COLOR])
     cols = ["WAC 643 nm, craters, query sub-tile", "WAC query → DEM keys (on the hillshade)", "DEM query → WAC keys (on the WAC)"]
@@ -1116,6 +1104,7 @@ FAMILY_STYLE = {"QK-A": ("#2a78d6", "o", "-", "QSVC, QK-A"), "QK-Z": ("#2a78d6",
                 "QK-P": ("#2a78d6", "^", ":", "QSVC, QK-P"), "RBF": ("#eb6834", "D", "-", "RBF SVM"),
                 "LIN": ("#1baf7a", "v", "-", "linear SVM")}
 QJ_FIG_METHODS = ("QK-A", "QK-Z", "QK-P", "RBF", "LIN")
+FILLED = ("RBF", "LIN", "QK-A")                 # methods drawn with filled markers (one per family)
 
 
 def quantum_classical_pairs(cfg: dict):
@@ -1158,8 +1147,7 @@ def run_quantum_vs_classical(cfg: dict, width_in: float = 7.16, pdf: bool = Fals
     probe_ap = qj2["representations"]["F-X"]["qg1_probe_full_all_s1train"]["ap"]
     full_curve = {int(k[1:]): v["lin_full"][:2] for k, v in qj2["fx_learning_curve"].items()}
 
-    plt.rcParams.update({"font.size": 7, "axes.labelsize": 7, "xtick.labelsize": 6.5, "ytick.labelsize": 6.5,
-                         "pdf.fonttype": 42, "axes.titlesize": 7.5})
+    plt.rcParams.update({**PAPER_RC, "axes.titlesize": 7.5})
     fig, axes = plt.subplots(2, 2, figsize=(width_in, 4.9), gridspec_kw={"hspace": 0.6, "wspace": 0.42})
     fig.patch.set_facecolor(SURFACE)
     (ax_d, ax_n), (ax_p, ax_r) = axes
@@ -1171,7 +1159,7 @@ def run_quantum_vs_classical(cfg: dict, width_in: float = 7.16, pdf: bool = Fals
             x = g[xkey].to_numpy(float)
             x = x * offsets[k] if logx else x + offsets[k]                      # dodge the error bars
             ax.errorbar(x, g["mean"], yerr=g["std"], color=col, marker=mk, ls=ls, lw=1.2, ms=4, capsize=1.5,
-                        elinewidth=0.6, mfc=col if m in ("RBF", "LIN", "QK-A") else SURFACE, mec=col, mew=0.9, zorder=3)
+                        elinewidth=0.6, mfc=col if m in FILLED else SURFACE, mec=col, mew=0.9, zorder=3)
         ax.axhline(s1_ap, color=INK_MUTED, ls=(0, (4, 2)), lw=0.9, zorder=1)
         ax.text(0.02, s1_ap - 0.006, f"stage 1 alone (AP {s1_ap:.2f})", transform=ax.get_yaxis_transform(),
                 va="top", ha="left", color=INK_MUTED, fontsize=6.5)
@@ -1241,7 +1229,7 @@ def run_quantum_vs_classical(cfg: dict, width_in: float = 7.16, pdf: bool = Fals
             mean, std = f1s[v][m]
             y = i + (k - 2) * 0.13
             ax_r.errorbar(mean, y, xerr=std, color=col, marker=mk, ms=4, ls="none", elinewidth=0.6, capsize=1.2,
-                          mfc=col if m in ("RBF", "LIN", "QK-A") else SURFACE, mec=col, mew=0.9, zorder=3)
+                          mfc=col if m in FILLED else SURFACE, mec=col, mew=0.9, zorder=3)
     ax_r.set_yticks(range(len(reps)))
     ax_r.set_yticklabels([f"{v} {names[v]}" for v in reps])
     ax_r.set_xlabel("F1 at probability 0.5 (2,000 candidates)")
@@ -1254,7 +1242,7 @@ def run_quantum_vs_classical(cfg: dict, width_in: float = 7.16, pdf: bool = Fals
         ax.xaxis.label.set_color(INK)
         ax.yaxis.label.set_color(INK)
     handles = [Line2D([], [], color=FAMILY_STYLE[m][0], marker=FAMILY_STYLE[m][1], ls=FAMILY_STYLE[m][2], lw=1.2, ms=4,
-                      mfc=FAMILY_STYLE[m][0] if m in ("RBF", "LIN", "QK-A") else SURFACE, mec=FAMILY_STYLE[m][0],
+                      mfc=FAMILY_STYLE[m][0] if m in FILLED else SURFACE, mec=FAMILY_STYLE[m][0],
                       label=FAMILY_STYLE[m][3]) for m in QJ_FIG_METHODS]
     handles.append(Line2D([], [], color=INK_MUTED, ls=(0, (4, 2)), lw=0.9, label="stage 1 alone"))
     handles.append(Line2D([], [], color=INK_MUTED, ls=(0, (6, 2, 1, 2)), lw=0.9, label="linear probe, full vectors, all S1-train"))

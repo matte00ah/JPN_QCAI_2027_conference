@@ -93,7 +93,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from qc_data import CONFIG_PATH, SETS, load_config, load_report, save_report, written  # noqa: E402
+from qc_data import CONFIG_PATH, SETS, load_config, load_report, save_report, token_grid, written  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -118,6 +118,14 @@ VARIANTS = {v.vid: v for v in (
     Variant("F-CM", "concatenation + per-token MLP projector, self-supervised (QF3)", 512, ("fcm",), trained=True),
     Variant("F-X", "bidirectional cross-attention fusion, self-supervised (QF2-QF3)", 512, ("fx",), trained=True),
 )}
+TRAINED = ("F-X", "F-CM")                       # the trained fusions, in the order of their reports and caches
+assert set(TRAINED) == {v.vid for v in VARIANTS.values() if v.trained}
+FUSED_CACHES = tuple(VARIANTS[vid].caches[0] for vid in TRAINED)       # their fused maps (QF4.3), optional caches
+
+
+def variant_ids(smoke: bool = False) -> list[str]:
+    """Ids of the representations in the order of Table I (the first two only for a smoke test)."""
+    return list(VARIANTS)[:2] if smoke else list(VARIANTS)
 
 
 class TokenStore:
@@ -127,11 +135,11 @@ class TokenStore:
         from qc_features import load_tokens
 
         self.caches, idx = {}, None
-        for name in ("wac", "dem", "early", "fx", "fcm"):
+        for name in ("wac", "dem", "early", *FUSED_CACHES):
             try:
                 self.caches[name], idx_n = load_tokens(cfg, name)
             except (ValueError, FileNotFoundError):
-                if name in ("fx", "fcm"):                                 # fused maps of QF4.3, optional
+                if name in FUSED_CACHES:                                  # fused maps of QF4.3, optional
                     continue
                 raise
             if idx is not None and not np.array_equal(idx["tile"], idx_n["tile"]):
@@ -140,15 +148,27 @@ class TokenStore:
         self.index = idx
         self.row_of_tile = {int(t): k for k, t in enumerate(idx["tile"])}
 
+    def modality_tokens(self, rows, device=None) -> dict:
+        """{modality: float32 tensor (len(rows), 16, 16, 384)} of the WAC and DEM tokens of the cache rows ``rows``
+        (on ``device`` if given)."""
+        import torch
 
-def variant_maps(store: TokenStore, vid: str, rows) -> np.ndarray:
-    """(len(rows), 16, 16, D) float32 maps of variant ``vid`` for the rows ``rows`` of the token cache."""
+        tok = {m: torch.from_numpy(np.asarray(self.caches[m][rows], dtype=np.float32)) for m in MODALITIES}
+        return tok if device is None else {m: t.to(device) for m, t in tok.items()}
+
+
+def variant_maps(store: TokenStore, vid: str, rows, dtype=np.float32) -> np.ndarray:
+    """(len(rows), 16, 16, D) maps of variant ``vid`` (``dtype``, float32 by default; the caches are float16, so
+    float16 is a lossless cheaper read) for the rows ``rows`` of the token cache."""
     v = VARIANTS[vid]
     if any(c not in store.caches for c in v.caches):
         raise ValueError(f"the fused maps of {vid} are not cached: run qc_fusion.py cache (QF4.3)")
     rows = np.asarray(rows)
+    read = lambda r: np.concatenate([np.asarray(store.caches[c][r], dtype=dtype) for c in v.caches], axis=-1)
+    if np.all(np.diff(rows) > 0):                                    # already increasing: read as is
+        return read(rows)
     order = np.argsort(rows)                                         # memmap reads in increasing order
-    out = np.concatenate([np.asarray(store.caches[c][rows[order]], dtype=np.float32) for c in v.caches], axis=-1)
+    out = read(rows[order])
     out[order] = out.copy()
     return out
 
@@ -199,11 +219,9 @@ def run_variants_check(cfg: dict, n_tiles: int = 32) -> dict:
                    "positive": int((idx["cls"] == 1).sum()), "negative": int((idx["cls"] == 0).sum()),
                    "ignore": int((idx["cls"] == -1).sum()),
                    "positive_per_band_1_2_4_8_km": [int((idx["band"][idx["cls"] == 1] == b).sum()) for b in range(3)],
-                   "check_owner_of_every_cell_is_its_tile": own_ok,
-                   "check_equal_qc82": bool(np.unique(idx["row"]).size == ref["tiles_used"] and idx["row"].size == ref["subtiles"]
-                                            and (idx["cls"] == 1).sum() == ref["positive"]
-                                            and (idx["cls"] == 0).sum() == ref["negative"]
-                                            and (idx["cls"] == -1).sum() == ref["ignore"])}
+                   "check_owner_of_every_cell_is_its_tile": own_ok}
+        sets[s]["check_equal_qc82"] = bool(sets[s]["tiles"] == ref["tiles_used"] and all(
+            sets[s][k] == ref[k] for k in ("subtiles", "positive", "negative", "ignore")))
     rng = np.random.default_rng(int(cfg["seed"]))
     rows = np.sort(rng.choice(len(store.index["tile"]), n_tiles, replace=False))
     variants = {}
@@ -219,11 +237,10 @@ def run_variants_check(cfg: dict, n_tiles: int = 32) -> dict:
         variants[vid] = r
     # owned_samples against a direct read of the cache, on the first tiles of S1-val
     x, idx = owned_samples(cfg, store, "F-C", "s1_val", chunk=7, max_tiles=20)
-    sel = np.arange(idx["row"].size)
-    direct = np.concatenate([np.asarray(store.caches[c][idx["row"][sel], idx["i"][sel], idx["j"][sel]], dtype=np.float32)
+    direct = np.concatenate([np.asarray(store.caches[c][idx["row"], idx["i"], idx["j"]], dtype=np.float32)
                              for c in ("wac", "dem")], axis=-1)
     report = {"per_set": sets, "variants": variants, "check_tiles": n_tiles,
-              "check_owned_samples_equal_direct_read_f_c_20_tiles": bool(np.array_equal(x[sel], direct))}
+              "check_owned_samples_equal_direct_read_f_c_20_tiles": bool(np.array_equal(x, direct))}
     save_report(cfg, "QF1", report)
     return report
 
@@ -400,7 +417,7 @@ def build_fusion_x(cfg: dict):
     """F-X with the hyper-parameters of ``fusion`` in ``qc_config.yaml`` (QD4, QF2)."""
     f = cfg["fusion"]
     return _fusion_modules()["FusionX"](in_dim=int(f["in_dim"]), d=int(f["d_model"]), heads=int(f["heads"]), blocks=int(f["blocks"]),
-                             ffn_ratio=int(f["ffn_ratio"]), out_dim=int(f["out_dim"]), grid=int(cfg["tiling"]["tile_px"]) // int(cfg["tiling"]["cell_px"]))
+                             ffn_ratio=int(f["ffn_ratio"]), out_dim=int(f["out_dim"]), grid=token_grid(cfg))
 
 
 def build_fusion(cfg: dict, vid: str):
@@ -410,7 +427,7 @@ def build_fusion(cfg: dict, vid: str):
     if vid == "F-CM":
         f = cfg["fusion"]
         return _fusion_modules()["FusionCM"](in_dim=int(f["in_dim"]), hidden=int(f["cm_hidden"]), out_dim=int(f["out_dim"]),
-                                             grid=int(cfg["tiling"]["tile_px"]) // int(cfg["tiling"]["cell_px"]))
+                                             grid=token_grid(cfg))
     raise ValueError(f"{vid} is not a trained fusion")
 
 
@@ -419,7 +436,7 @@ def build_decoder(cfg: dict):
     f, d = cfg["fusion"], cfg["fusion"]["decoder"]
     return _fusion_modules()["Decoder"](in_dim=int(f["out_dim"]), d=int(d["d_model"]), heads=int(d["heads"]),
                                         ffn_ratio=int(d["ffn_ratio"]), out_dim=int(f["in_dim"]),
-                                        grid=int(cfg["tiling"]["tile_px"]) // int(cfg["tiling"]["cell_px"]))
+                                        grid=token_grid(cfg))
 
 
 def reconstruction_loss(pred: dict, tokens: dict, masks: dict):
@@ -448,7 +465,7 @@ def run_model_check(cfg: dict, n_tiles: int = 8) -> dict:
     model = build_fusion_x(cfg).eval()
     store = TokenStore(cfg)
     rows = np.sort(np.random.default_rng(int(cfg["seed"])).choice(len(store.index["tile"]), n_tiles, replace=False))
-    tok = {m: torch.from_numpy(np.asarray(store.caches[m][rows], dtype=np.float32)) for m in MODALITIES}
+    tok = store.modality_tokens(rows)
     n_tok = model.grid ** 2
     count = lambda mod: int(sum(p.numel() for p in mod.parameters()))
     params = {"total": count(model), "projections": count(model.proj), "blocks": count(model.blocks),
@@ -536,7 +553,7 @@ def run_masking_check(cfg: dict, n_masks: int = 20000, n_tiles: int = 8) -> dict
     import torch
 
     lo, hi = (float(v) for v in cfg["fusion"]["mask_ratio"])
-    n_tok = (int(cfg["tiling"]["tile_px"]) // int(cfg["tiling"]["cell_px"])) ** 2
+    n_tok = token_grid(cfg) ** 2
     g = lambda: torch.Generator().manual_seed(int(cfg["seed"]))
     masks = sample_masks(n_masks, n_tok, (lo, hi), generator=g())
     again = sample_masks(n_masks, n_tok, (lo, hi), generator=g())
@@ -557,7 +574,7 @@ def run_masking_check(cfg: dict, n_masks: int = 20000, n_tiles: int = 8) -> dict
     model = build_fusion_x(cfg).eval()
     store = TokenStore(cfg)
     rows = np.sort(np.random.default_rng(int(cfg["seed"])).choice(len(store.index["tile"]), n_tiles, replace=False))
-    tok = {m: torch.from_numpy(np.asarray(store.caches[m][rows], dtype=np.float32)).reshape(n_tiles, n_tok, -1) for m in MODALITIES}
+    tok = {m: t.reshape(n_tiles, n_tok, -1) for m, t in store.modality_tokens(rows).items()}
     mk = sample_masks(n_tiles, n_tok, (lo, hi), generator=g())
     noise = {m: torch.randn_like(tok[m]) for m in MODALITIES}
     with torch.no_grad():
@@ -627,7 +644,7 @@ def run_decoder_check(cfg: dict, n_tiles: int = 8, steps: int = 100) -> dict:
     enc, dec = build_fusion_x(cfg), build_decoder(cfg)
     store = TokenStore(cfg)
     rows = np.sort(np.random.default_rng(int(cfg["seed"])).choice(len(store.index["tile"]), n_tiles, replace=False))
-    tok = {m: torch.from_numpy(np.asarray(store.caches[m][rows], dtype=np.float32)) for m in MODALITIES}
+    tok = store.modality_tokens(rows)
     n_tok, c = enc.grid ** 2, tok["wac"].shape[-1]
     gen = torch.Generator().manual_seed(int(cfg["seed"]))
     f = cfg["fusion"]
@@ -687,7 +704,7 @@ def run_name(vid: str, lr: float, seed: int) -> str:
     return f"{vid}_lr{lr:.0e}_s{seed}"
 
 
-def set_tokens(cfg: dict, store: TokenStore, set_name: str, device, max_tiles: int | None = None) -> dict:
+def set_tokens(store: TokenStore, set_name: str, device, max_tiles: int | None = None) -> dict:
     """Tokens {modality: (n, 256, 384) float16 tensor on ``device``} of the tiles of ``set_name``."""
     import torch
 
@@ -849,7 +866,7 @@ def run_train(cfg: dict, variants, device: str, smoke: bool = False, sweep: bool
     store = TokenStore(cfg)
     mx = 64 if smoke else None
     t0 = time.perf_counter()
-    train, val = set_tokens(cfg, store, "s1_train", device, mx), set_tokens(cfg, store, "s1_val", device, mx)
+    train, val = set_tokens(store, "s1_train", device, mx), set_tokens(store, "s1_val", device, mx)
     load_s = round(time.perf_counter() - t0, 1)
     n_tok = train["wac"].shape[1]
     f = cfg["fusion"]
@@ -938,7 +955,7 @@ def sweep_comparison(cfg: dict, models: dict) -> dict:
 def tile_classes(cfg: dict, store: TokenStore, rows) -> np.ndarray:
     """(len(rows), 256) class (QB2.3: 1 / 0 / -1) of every sub-tile of the tiles at ``rows``, token order."""
     cls = np.load(cfg["paths"]["output"] / "cell_labels.npz")["cls"]
-    g = int(cfg["tiling"]["tile_px"]) // int(cfg["tiling"]["cell_px"])
+    g = token_grid(cfg)
     k = int(cfg["tiling"]["stride_px"]) // int(cfg["tiling"]["cell_px"])
     a = np.arange(g)
     ci = store.index["ti"][rows, None, None] * k + a[None, :, None]
@@ -999,7 +1016,7 @@ def run_fusion_checks(cfg: dict, device: str = "cpu") -> dict:
     t0 = time.perf_counter()
     f, t = cfg["fusion"], cfg["fusion"]["train"]
     store = TokenStore(cfg)
-    val = set_tokens(cfg, store, "s1_val", device)
+    val = set_tokens(store, "s1_val", device)
     nv, n_tok = val["wac"].shape[:2]
     rand = sample_masks(nv, n_tok, f["mask_ratio"], float(f["modality_dropout"]),
                         generator=torch.Generator().manual_seed(int(cfg["seed"])))           # the S1-val masks of QF3.4
@@ -1011,7 +1028,7 @@ def run_fusion_checks(cfg: dict, device: str = "cpu") -> dict:
             "both_masked": ("total", "wac", "dem")}
     qf34 = load_report(cfg, "QF3.4")["models"]
     q41 = {}
-    for vid in ("F-X", "F-CM"):
+    for vid in TRAINED:
         lr = qf34[vid]["chosen_lr"]
         per_seed = {}
         for seed in (int(x) for x in t["seeds"]):
@@ -1036,7 +1053,7 @@ def run_fusion_checks(cfg: dict, device: str = "cpu") -> dict:
 
     # QF4.2 (a) spread of the fused maps, downstream models, no masks
     spread = {}
-    for vid in ("F-X", "F-CM"):
+    for vid in TRAINED:
         enc = load_fusion(cfg, vid, device=device)
         with torch.no_grad():
             x = torch.cat([enc({m: val[m][s:s + 128] for m in MODALITIES}).reshape(-1, n_tok, f["out_dim"]).float().cpu()
@@ -1095,7 +1112,7 @@ def attention_example(cfg: dict, store: TokenStore, enc, device) -> dict:
         own[lr_, lc_] = True
         cand = np.where((cls == 1) & own, np.nan_to_num(diam, nan=-1), -1)
         qi, qj = np.unravel_index(int(np.argmax(cand)), cand.shape)
-        tok = {m: torch.from_numpy(np.asarray(store.caches[m][[row]], dtype=np.float32)).to(device) for m in MODALITIES}
+        tok = store.modality_tokens([row], device)
         with torch.no_grad():
             w = enc.encode(tok, need_weights=True)[2][-1]
         att = {m: w[m][0].float().mean(0)[qi * g + qj].reshape(g, g).cpu().numpy() for m in MODALITIES}
@@ -1114,11 +1131,11 @@ def run_fused_cache(cfg: dict, device: str = "cpu", batch: int = 256, n_check: i
     float16 memory-mapped ``<output>/tokens/fx.npy`` and ``fcm.npy`` (N, 16, 16, 512), same rows as the
     token cache, resumable (``progress.npz``); then ``variant_maps`` reads them like the other variants.
     Checks: every row written and finite, ``n_check`` random tiles recomputed in float32."""
-    import hashlib
     import time
 
     import torch
 
+    from qc_checks import md5sum
     from qc_features import tokens_dir
 
     d = tokens_dir(cfg)
@@ -1127,10 +1144,10 @@ def run_fused_cache(cfg: dict, device: str = "cpu", batch: int = 256, n_check: i
     shape = (n, g, g, dim)
     progress = dict(np.load(d / "progress.npz"))
     report = {}
-    for vid, name in (("F-X", "fx"), ("F-CM", "fcm")):
+    for vid, name in zip(TRAINED, FUSED_CACHES):
         t0 = time.perf_counter()
         path, mpath = d / f"{name}.npy", model_path(cfg, vid)
-        md5 = hashlib.md5(mpath.read_bytes()).hexdigest()
+        md5 = md5sum(mpath)
         enc = load_fusion(cfg, vid, device=device)
         if path.exists() and name in progress and str(progress.get(name + "_model", "")) == md5:
             cache = np.load(path, mmap_mode="r+")
@@ -1143,7 +1160,7 @@ def run_fused_cache(cfg: dict, device: str = "cpu", batch: int = 256, n_check: i
         print(f"{vid}: {len(todo)} of {n} tiles to write", flush=True)
         for c, s in enumerate(range(0, len(todo), batch)):
             rows = todo[s:s + batch]
-            tok = {m: torch.from_numpy(np.asarray(store.caches[m][rows], dtype=np.float32)).to(device) for m in MODALITIES}
+            tok = store.modality_tokens(rows, device)
             with torch.no_grad():
                 cache[rows] = enc(tok).cpu().numpy().astype(np.float16)
             progress[name][rows] = True
@@ -1155,7 +1172,7 @@ def run_fused_cache(cfg: dict, device: str = "cpu", batch: int = 256, n_check: i
         written(d / "progress.npz")
         finite = all(bool(np.isfinite(np.asarray(cache[s:s + 512], dtype=np.float32)).all()) for s in range(0, n, 512))
         chk = np.sort(np.random.default_rng(int(cfg["seed"])).choice(n, n_check, replace=False))
-        tok = {m: torch.from_numpy(np.asarray(store.caches[m][chk], dtype=np.float32)).to(device) for m in MODALITIES}
+        tok = store.modality_tokens(chk, device)
         with torch.no_grad():
             ref = enc(tok).cpu()
         c16 = torch.from_numpy(np.asarray(cache[chk], dtype=np.float32))
@@ -1168,11 +1185,11 @@ def run_fused_cache(cfg: dict, device: str = "cpu", batch: int = 256, n_check: i
                        "minutes": round((time.perf_counter() - t0) / 60, 1)}
     # the variants now read the caches: owned samples of a few S1-val tiles equal the model output
     store = TokenStore(cfg)
-    for vid in ("F-X", "F-CM"):
+    for vid in TRAINED:
         x, idx = owned_samples(cfg, store, vid, "s1_val", max_tiles=4)
         enc = load_fusion(cfg, vid, device=device)
         rows = np.unique(idx["row"])
-        tok = {m: torch.from_numpy(np.asarray(store.caches[m][rows], dtype=np.float32)).to(device) for m in MODALITIES}
+        tok = store.modality_tokens(rows, device)
         with torch.no_grad():
             ref = enc(tok).cpu().numpy()
         r = ref[np.searchsorted(rows, idx["row"]), idx["i"], idx["j"]]
@@ -1185,7 +1202,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["variants", "model", "masking", "decoder", "train", "checks", "cache"])
     ap.add_argument("--config", type=Path, default=CONFIG_PATH)
-    ap.add_argument("--variants", nargs="+", default=["F-X", "F-CM"], choices=["F-X", "F-CM"], help="train: models")
+    ap.add_argument("--variants", nargs="+", default=list(TRAINED), choices=list(TRAINED), help="train: models")
     ap.add_argument("--device", default=None, help="train / checks / cache: torch device (default: cuda for train, cpu otherwise)")
     ap.add_argument("--smoke", action="store_true", help="train: 64 tiles, 2 epochs, no report (code test)")
     ap.add_argument("--sweep", action="store_true", help="train: QF3.5 exploratory recipe (fusion.train_sweep)")

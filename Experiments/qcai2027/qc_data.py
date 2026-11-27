@@ -69,6 +69,7 @@ import csv
 import json
 import re
 import math
+import os
 import sys
 import warnings
 from dataclasses import asdict, dataclass, replace
@@ -92,6 +93,7 @@ def load_config(path: Path = CONFIG_PATH) -> dict:
     """Configuration with the ``paths`` resolved against the project root."""
     cfg = yaml.safe_load(path.read_text())
     cfg["paths"] = {k: (PROJECT_ROOT / v).resolve() for k, v in cfg["paths"].items()}
+    _import_dataset_modules(cfg)
     return cfg
 
 
@@ -150,6 +152,15 @@ def save_report(cfg: dict, step: str, data: dict) -> Path:
     out.write_text(json.dumps({k: report[k] for k in sorted(report, key=key)}, indent=1) + "\n")
     written(out)
     return out
+
+
+def save_npz_atomic(path: Path, arrays: dict) -> None:
+    """Write ``arrays`` to the npz ``path`` through a temporary file (a job killed while writing leaves the previous
+    file)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name("tmp_" + path.name)
+    np.savez(tmp, **arrays)
+    os.replace(tmp, path)
 
 
 def load_report(cfg: dict, step: str) -> dict:
@@ -300,7 +311,6 @@ class RegionSource:
 
 def product_grids(cfg: dict, modality: str, inventory: dict | None = None) -> dict[str, CylGrid]:
     """Grids of the products of one modality (``products`` in the config), from the labels only."""
-    _import_dataset_modules(cfg)
     from data_inventory import PdsLabel, read_embedded_label  # noqa: E402
 
     inventory = inventory or read_inventory(cfg)
@@ -319,7 +329,6 @@ def region_grid(cfg: dict, modality: str = "wac", inventory: dict | None = None)
 
 def region_layout(cfg: dict, modality: str, inventory: dict | None = None) -> RegionSource:
     """Open the products of one modality (``products`` in the config) and lay them out on R."""
-    _import_dataset_modules(cfg)
     from data_quality import open_image  # noqa: E402
 
     inventory = inventory or read_inventory(cfg)
@@ -450,9 +459,24 @@ def validity_summary(src: RegionSource, step: int = 16) -> dict:
             **{f"{k}_valid_fraction": round(float(np.isfinite(v).mean()), 6) for k, v in edge.items()}}
 
 
+def pixel_m(g: CylGrid) -> float:
+    """N-S pixel size (m) of an equirectangular grid on the reference sphere."""
+    return 2 * math.pi * MOON_RADIUS_M / 360.0 / g.ppd
+
+
+def pixel_km(g: CylGrid) -> float:
+    """N-S pixel size (km) of an equirectangular grid on the reference sphere."""
+    return pixel_m(g) / 1000.0
+
+
+def token_grid(cfg: dict) -> int:
+    """Sub-tiles (backbone tokens) per tile side: tile_px // cell_px."""
+    return int(cfg["tiling"]["tile_px"]) // int(cfg["tiling"]["cell_px"])
+
+
 def describe(src: RegionSource) -> dict:
     g = src.grid
-    px_ns_m = 2 * math.pi * MOON_RADIUS_M / 360.0 / g.ppd
+    px_ns_m = pixel_m(g)
     lat_abs_max = max(abs(g.north), abs(g.south))
     return {
         "modality": src.modality,
@@ -798,6 +822,12 @@ def cell_blocks(grid: CylGrid, shape: tuple[int, int], cell_px: int, bounds: dic
     _, bj = block_of(np.full_like(lon, bounds["lat_max"]), lon, bounds, block_deg)
     n_c = round((bounds["lon_max"] - bounds["lon_min"]) / block_deg)
     return bi[:, None] * n_c + bj[None, :]
+
+
+def region_cell_blocks(cfg: dict, shape: tuple[int, int]) -> np.ndarray:
+    """``cell_blocks`` on the cell grid of R with the tiling, region and block size of the config."""
+    return cell_blocks(region_grid(cfg, "wac"), shape, int(cfg["tiling"]["cell_px"]), cfg["region"],
+                       float(cfg["split"]["block_deg"]))
 
 
 def block_area_km2(lat_min, lat_max, dlon_deg: float) -> np.ndarray:

@@ -1,0 +1,32 @@
+# Python >= 3.12 (tested with 3.12).
+# Versions are the ones the experiment was run with; newer minor versions should work.
+#
+# PyTorch: the line below installs the default build from PyPI. For a specific CUDA version
+# install torch first from https://pytorch.org (the experiment used torch 2.11 with CUDA 12.8), e.g.
+#   pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cu128
+
+# numerics and data
+numpy>=2.5,<3
+scipy>=1.18
+pandas>=3.1
+PyYAML>=6.0
+joblib>=1.6
+
+# deep learning (frozen DINOv2 backbone, fusion model, probes, stage 1)
+torch>=2.11
+torchvision>=0.26
+timm>=1.0.31
+huggingface_hub>=2.4
+safetensors>=0.8
+
+# classical machine learning (probes, SVM, classical baselines)
+scikit-learn>=1.9
+
+# quantum kernels (simulation, fake IBM backends with noise models, readout mitigation)
+qiskit>=2.6,<3
+qiskit-aer>=0.18
+qiskit-ibm-runtime>=0.52
+mthree>=3.0
+
+# figures
+matplotlib>=3.11

@@ -1,0 +1,7 @@
+product_id,mission,subset,projection_class,status,tiles_read,tiles_texture,sentinels,resolution_ratio,interp_patch_fraction,snr_db,noise_sigma,stripe_ratio,dropout_fraction,small_holes_per_mpx,out_of_range_fraction,clip_excess_fraction,hist_gap_fraction,S_res,S_snr,S_stripe,S_dropout,S_clipquant,quality_score
+WAC_GLOBAL_E300N0450_100M,LRO,WAC_GLOBAL,cylindrical,ok,32,32,,0.607961,8.32627e-05,10.4289,0.00188031,1.49414,0,0,0,0,0,0.803939,0.510721,1,1,1,0.794398
+WAC_GLOBAL_E300S0450_100M,LRO,WAC_GLOBAL,cylindrical,ok,32,32,,0.607961,0.000732207,15.1848,0.00183637,1.40179,0,0,0,0,0,0.803615,0.629619,1,1,1,0.829970
+SLDEM2015_512_00N_30N_000_045_FLOAT,LRO,sldem2015/tiles,cylindrical,ok,32,32,,0.607961,0,28.3886,0.00244574,1.12825,0,0,0,0,0,0.803981,0.959714,1,1,1,0.929108
+SLDEM2015_512_00N_30N_045_090_FLOAT,LRO,sldem2015/tiles,cylindrical,ok,32,32,,0.607961,0,40.9139,0.00245683,1.15574,0,0,0,0,0,0.803981,1,1,1,1,0.941194
+SLDEM2015_512_30S_00S_000_045_FLOAT,LRO,sldem2015/tiles,cylindrical,ok,32,32,,0.607961,0,39.208,0.00263099,1.08875,0,0,0,0,0,0.803981,1,1,1,1,0.941194
+SLDEM2015_512_30S_00S_045_090_FLOAT,LRO,sldem2015/tiles,cylindrical,ok,32,32,,0.607961,0,42.393,0.00238446,1.07602,0,0,0,0,0,0.803981,1,1,1,1,0.941194

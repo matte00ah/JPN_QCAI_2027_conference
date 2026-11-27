@@ -159,7 +159,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from qc_data import CONFIG_PATH, load_config, load_report, save_report  # noqa: E402
 from qc_kernels import (expectations_torch, feature_angles, features_path, fidelity_kernels, kernel_projected,  # noqa: E402
-                        kernel_qk_a, load_qk, median_gamma, noisy_kernels, projected_features, reduce_features, state_chunks)
+                        projected_kernels, kernel_qk_a, rep_suffix, load_qk, median_gamma, noisy_kernels, projected_features, reduce_features, state_chunks)
 from qc_probes import BANDS, average_precision, band_masks  # noqa: E402
 
 
@@ -191,6 +191,12 @@ def svc_scores(model, k_te: np.ndarray) -> dict:
     return {"proba": model.predict_proba(k_te)[:, pos], "margin": svc.decision_function(k_te), "pred": svc.predict(k_te)}
 
 
+def config_rs(r, s) -> tuple[int, float]:
+    """Repetitions r and width scale s of a run row (CSV / pick dict); missing (None or NaN) means 1 (maps without them)."""
+    missing = lambda v: v is None or bool(np.isnan(v))
+    return (1 if missing(r) else int(r)), (1.0 if missing(s) else float(s))
+
+
 def stage2_kernels(name: str, a_tr: np.ndarray, a_te: np.ndarray, c: float, reps: int = 1, gamma_scale: float = 1.0,
                    shots: int | None = None, rng=None, device: str = "cuda") -> tuple[np.ndarray, np.ndarray]:
     """(K_train, K_test) of the feature map ``name`` (QK-A, QK-Z, QK-Z-qiskit, QK-P) from the standardised components
@@ -206,7 +212,7 @@ def stage2_kernels(name: str, a_tr: np.ndarray, a_te: np.ndarray, c: float, reps
         return noisy_kernels(name, exact, shots, rng, gamma_scale)[:2]
     if name == "QK-P":
         g = gamma_scale * median_gamma(exact[0])
-        return kernel_projected(exact[0], exact[0], g), kernel_projected(exact[1], exact[0], g)
+        return projected_kernels(exact[0], exact[1], g)
     return exact
 
 
@@ -237,7 +243,7 @@ def run_svm_check(cfg: dict, device: str = "cuda") -> dict:
                 checks["proba_in_0_1"] &= bool(np.all((sc["proba"] >= 0) & (sc["proba"] <= 1)))
                 ap_p, ap_m = average_precision(sc["proba"], y_te), average_precision(sc["margin"], y_te)
                 checks["ap_proba_equal_ap_margin"] &= abs(ap_p - ap_m) < 1e-9
-                key = f"{name}_d{d}" + ("" if name == "QK-A" else f"_r{r}") + ("_exact" if shots is None else f"_N{shots}")
+                key = f"{name}_d{d}{rep_suffix(name, r)}" + ("_exact" if shots is None else f"_N{shots}")
                 out[key] = {"test_ap_proba": round(ap_p, 4), "test_ap_margin": round(ap_m, 4),
                             "test_f1_predict": round(f1(sc["pred"], y_te), 4),
                             "test_f1_proba05": round(f1((sc["proba"] >= 0.5).astype(int), y_te), 4),
@@ -306,7 +312,7 @@ def grid_kernels(a_tr: np.ndarray, a_va: np.ndarray, c: float, maps, reps, scale
         if "QK-P" in maps:
             g0 = median_gamma(ez[0])
             for s in scales:
-                yield "QK-P", r, s, kernel_projected(ez[0], ez[0], s * g0), kernel_projected(ez[1], ez[0], s * g0)
+                yield "QK-P", r, s, *projected_kernels(ez[0], ez[1], s * g0)
 
 
 def cv_search(x: np.ndarray, y: np.ndarray, blocks: np.ndarray, d: int, cfg: dict, maps=("QK-A", "QK-Z", "QK-P"),
@@ -417,6 +423,22 @@ def stage2_dir(cfg: dict) -> Path:
     return cfg["paths"]["output"] / "stage2"
 
 
+def upsert_runs(path: Path, df) -> None:
+    """Write the runs ``df`` to the runs CSV ``path``, replacing the rows with the same ``run_id``."""
+    import pandas as pd
+
+    if path.exists():
+        old = pd.read_csv(path)
+        df = pd.concat([old[~old["run_id"].isin(df["run_id"])], df], ignore_index=True)
+    df.to_csv(path, index=False, float_format="%.5g")
+
+
+def mean_std(v, with_n: bool = False) -> list:
+    """[mean, std (ddof 1, None for one value)] of the Series ``v``, 4 decimals, plus its length if ``with_n``."""
+    out = [round(float(v.mean()), 4), round(float(v.std(ddof=1)), 4) if len(v) > 1 else None]
+    return out + [int(len(v))] if with_n else out
+
+
 def stage2_paths(cfg: dict, tag: str = "qi4", variant: str | None = None) -> dict:
     """Files of a family of stage-2 runs: ``results/<tag>_runs.csv``, ``results/<tag>_cv.csv`` and the test scores
     ``<output>/stage2/<tag>_test_scores.npz`` (one npz per variant, ``<tag>_<variant>_test_scores.npz``, when the
@@ -449,11 +471,9 @@ def save_unit(cfg: dict, unit: str, cv_rows: list[dict], runs: list[dict], score
     """Write one unit (one variant, d, n, seed) of QI4.3 / QI6.1 / QJ1 to ``paths`` (default the QI4.3 files): its CV
     table (rows of the unit and of the same methods replaced, so one method can be redone alone), its test scores (npz rewritten through a temporary file) and, last, its runs
     with the columns ``cols`` (default ``RUN_COLS``; the completion marker used to resume)."""
-    import os
-
     import pandas as pd
 
-    from qc_data import written
+    from qc_data import save_npz_atomic, written
 
     p = paths or qi4_paths(cfg)
     p["scores"].parent.mkdir(parents=True, exist_ok=True)
@@ -464,19 +484,13 @@ def save_unit(cfg: dict, unit: str, cv_rows: list[dict], runs: list[dict], score
         cv = pd.concat([old[keep], cv], ignore_index=True)
     cv.to_csv(p["cv"], index=False, float_format="%.5g")
     old = dict(np.load(p["scores"])) if p["scores"].exists() else {}
-    tmp = p["scores"].with_name("tmp_" + p["scores"].name)
-    np.savez(tmp, **{**old, **scores})
-    os.replace(tmp, p["scores"])
-    runs_df = pd.DataFrame(runs)[cols or RUN_COLS]
-    if p["runs"].exists():
-        old = pd.read_csv(p["runs"])
-        runs_df = pd.concat([old[~old["run_id"].isin(runs_df["run_id"])], runs_df], ignore_index=True)
-    runs_df.to_csv(p["runs"], index=False, float_format="%.5g")
+    save_npz_atomic(p["scores"], {**old, **scores})
+    upsert_runs(p["runs"], pd.DataFrame(runs)[cols or RUN_COLS])
     for k in p.values():
         written(k)
 
 
-def refit_and_score(cfg: dict, a_tr: np.ndarray, y_tr: np.ndarray, a_te: np.ndarray, y_te: np.ndarray, picks: list[dict],
+def refit_and_score(a_tr: np.ndarray, y_tr: np.ndarray, a_te: np.ndarray, y_te: np.ndarray, picks: list[dict],
                     device: str) -> list[tuple[dict, dict, dict]]:
     """Every configuration of ``picks`` ({map, c, r, s, C, ...}) refitted on the whole training sample (``fit_svc``)
     and scored on the test candidates: [(pick, {proba, margin}, {test_ap, test_f1, support_vectors})].  The kernels
@@ -528,7 +542,7 @@ def run_unit(cfg: dict, x_tr, i_tr, x_te, i_te, d: int, n: int, seed: int, maps,
     scores = {f"test_{k}": np.asarray(v) for k, v in i_te.items()}          # identity of the test candidates
     if te_index is not None:
         scores["test_index"] = np.asarray(te_index)
-    for p, sc, met in refit_and_score(cfg, a_tr, y_tr, a_te, y_te, picks, device):
+    for p, sc, met in refit_and_score(a_tr, y_tr, a_te, y_te, picks, device):
         runs.append({"step": step, "script": "qc_experiments.py", "run_id": p["run_id"], "role": p["role"], "variant": vid,
                      "map": p["map"], "d": d, "n": n, "seed": seed, "c": p["c"], "r": p["r"], "s": p["s"], "C": p["C"],
                      "cv_ap": p["cv_ap"], "cv_ap_std": p["cv_ap_std"], "cv_f1": p["cv_f1"], **met,
@@ -563,7 +577,7 @@ def qi4_summary(cfg: dict) -> dict:
     main = cfg["stage2"]["main"]
     df = pd.read_csv(qi4_paths(cfg)["runs"])
     ch, n0 = df[df["role"] == "chosen"], int(main["n"])
-    ms = lambda v: [round(float(v.mean()), 4), round(float(v.std(ddof=1)), 4) if len(v) > 1 else None, int(len(v))]
+    ms = lambda v: mean_std(v, with_n=True)
     grid = {f"{m}_d{d}": {"test_ap_mean_std_runs": ms(g["test_ap"]), "cv_ap_mean_std_runs": ms(g["cv_ap"]),
                           "test_f1_mean": round(float(g["test_f1"].mean()), 4),
                           "chosen_c": g["c"].value_counts().to_dict(), "chosen_C": g["C"].value_counts().to_dict()}
@@ -713,7 +727,7 @@ def stage2_metrics(cfg: dict, vid: str, runs, z) -> dict:
     df = pd.DataFrame(rows)
     checks.update({"runs": len(df), "max_abs_ap_diff_vs_runs_csv": round(ap_diff, 6),
                    "proba_vs_margin_agreement_min": round(min(agree), 4)})
-    ms = lambda v: [round(float(v.mean()), 4), round(float(v.std(ddof=1)), 4) if len(v) > 1 else None]
+    ms = mean_std
     metrics = [c for c in df.columns if c not in ("map", "d", "n", "seed")]
     per_run = {f"{m}_d{d}": {f"n{n}": {k: ms(g2[k]) for k in metrics} for n, g2 in g.groupby("n")}
                for (m, d), g in df.groupby(["map", "d"])}
@@ -871,7 +885,7 @@ def classical_scores(cfg: dict, method: str, p: dict, a_tr: np.ndarray, y_tr: np
             k_tr, k_te = a_tr @ a_tr.T, a_te @ a_tr.T
         else:
             g = p["s"] * median_gamma(a_tr)
-            k_tr, k_te = kernel_projected(a_tr, a_tr, g), kernel_projected(a_te, a_tr, g)
+            k_tr, k_te = projected_kernels(a_tr, a_te, g)
         if calibrate:
             model = fit_svc(k_tr, y_tr, p["C"])
             sc = svc_scores(model, k_te)
@@ -1067,7 +1081,7 @@ def qj1_summary(cfg: dict) -> dict:
     vid0, n0 = main["variant"], int(main["n"])
     bds = sorted(set(best_dims(cfg).values()))
     runs = pd.read_csv(stage2_paths(cfg, "qj1")["runs"])
-    ms = lambda v: [round(float(v.mean()), 4), round(float(v.std(ddof=1)), 4) if len(v) > 1 else None, int(len(v))]
+    ms = lambda v: mean_std(v, with_n=True)
     fx = runs[runs["variant"] == vid0]
     q4 = pd.read_csv(qi4_paths(cfg)["runs"])
     q4 = q4[q4["role"] == "chosen"]
@@ -1187,7 +1201,7 @@ def qj2_summary(cfg: dict) -> dict:
     qj1 = pd.read_csv(stage2_paths(cfg, "qj1")["runs"])
     q = pd.concat([pd.read_csv(qi4_paths(cfg)["runs"]), pd.read_csv(stage2_paths(cfg, "qi6")["runs"])], ignore_index=True)
     q = q[(q["role"] == "chosen") & (q["d"] == d0)]
-    ms = lambda v: [round(float(v.mean()), 4), round(float(v.std(ddof=1)), 4) if len(v) > 1 else None, int(len(v))]
+    ms = lambda v: mean_std(v, with_n=True)
     out, checks = {}, {}
     for v in [vid0] + list(cfg["stage2"]["representations"]["variants"]):
         ch = runs[(runs["variant"] == v) & (runs["n"] == n0)]
@@ -1284,7 +1298,7 @@ def qj3_statistics(cfg: dict, n_boot: int | None = None, save: bool = True) -> d
     qmaps = list(cfg["stage2"]["main"]["maps"])
     ms = lambda v: [round(float(np.mean(v)), 4), round(float(np.std(v, ddof=1)), 4) if len(v) > 1 else None]
     units, comps, checks, cache = {}, [], {}, {}
-    npz = lambda p: cache.setdefault(p, np.load(p))
+    npz = lambda p: cache[p] if p in cache else cache.setdefault(p, np.load(p))
     for (v, d, n), g in runs.groupby(["variant", "d", "n"]):
         if not (set(qmaps) & set(g["map"])) or not (set(QJ3_REFERENCES) <= set(g["map"])):
             continue
@@ -1384,13 +1398,13 @@ def quantum_fit_score(m: str, p: dict, a_tr: np.ndarray, y_tr: np.ndarray, a_te:
     ``engine`` on ``device``, as QI3.1), ``fit_svc``, ``svc_scores``; returns the seconds of each phase and the
     scores.  QK-A uses its closed form (no state simulation) on every engine."""
     th_tr, th_te = feature_angles(a_tr, p["c"]), feature_angles(a_te, p["c"])
-    r = 1 if p.get("r") is None or np.isnan(p["r"]) else int(p["r"])
+    r = config_rs(p.get("r"), None)[0]
     t0 = time.perf_counter()
     if m == "QK-P":
         e_tr = projected_features(th_tr, r, device, engine=engine)
         e_te = projected_features(th_te, r, device, engine=engine)
         g = float(p["s"]) * median_gamma(e_tr)
-        k_tr, k_te = kernel_projected(e_tr, e_tr, g), kernel_projected(e_te, e_tr, g)
+        k_tr, k_te = projected_kernels(e_tr, e_te, g)
     else:
         k_tr, k_te = fidelity_kernels(m, th_tr, th_te, r, device, engine=engine)
     t1 = time.perf_counter()
@@ -1414,6 +1428,23 @@ def timed(fn, repeats: int, long_s: float = 60.0) -> tuple[list[dict], dict]:
     return out, res
 
 
+def chosen_quantum_runs(cfg: dict):
+    """The chosen QSVC runs of QI4.3 on the main variant (one row per map, d, n, seed; columns of ``qi4_runs.csv``)."""
+    import pandas as pd
+
+    q = pd.read_csv(qi4_paths(cfg)["runs"])
+    return q[(q["role"] == "chosen") & (q["variant"] == cfg["stage2"]["main"]["variant"])]
+
+
+def qpu_circuits(feature_map: str, n: int, support_vectors: float, candidates: float) -> tuple[float, float]:
+    """(training, inference) circuits of one QSVC on a QPU: fidelity kernels one compute-uncompute circuit per pair,
+    n(n-1)/2 for training (diagonal = 1) and candidates x support vectors for inference; QK-P 3 circuits per sample
+    (all qubits measured in X, Y, Z), 3n and 3 x candidates."""
+    if feature_map == "QK-P":
+        return 3 * n, 3 * candidates
+    return n * (n - 1) // 2, candidates * support_vectors
+
+
 def hardware_counts(cfg: dict) -> dict:
     """Circuits and shots that the chosen QSVC runs of QI4.3 (F-X) would need on a QPU (no device data: depth, gates
     and QPU time are QK3).  Fidelity kernels (QK-A, QK-Z), one compute-uncompute circuit per pair: training
@@ -1421,22 +1452,19 @@ def hardware_counts(cfg: dict) -> dict:
     function); QK-P, the local expectations of each state: 3 circuits per sample (all qubits measured in X, in Y, in
     Z), training 3n, inference 3 x candidates, independent of the support vectors.  Shots = circuits x
     ``diagnostics.shots_reference``.  [mean over the seeds] per map, d, n."""
-    import pandas as pd
-
     shots = int(cfg["diagnostics"]["shots_reference"])
     m_te = int(cfg["test_subset"]["size"])
-    q = pd.read_csv(qi4_paths(cfg)["runs"])
-    q = q[(q["role"] == "chosen") & (q["variant"] == cfg["stage2"]["main"]["variant"])]
+    q = chosen_quantum_runs(cfg)
     out = {}
     for (m, d, n), g in q.groupby(["map", "d", "n"]):
         sv = float(g["support_vectors"].mean())
-        tr, te = (3 * n, 3 * m_te) if m == "QK-P" else (n * (n - 1) // 2, m_te * sv)
+        tr, te = qpu_circuits(m, n, sv, m_te)
         out[f"{m}_d{d}_n{n}"] = {"qubits": int(d), "support_vectors_mean": round(sv, 1), "training_circuits": int(tr),
                                  "inference_circuits": int(round(te)), "total_shots": float(f"{(tr + te) * shots:.3g}")}
     return {"shots_per_circuit": shots, "test_candidates": m_te, "runs": out}
 
 
-def run_costs(cfg: dict, device: str = "cuda", repeats: int = 3, units=None, save: bool = True) -> dict:
+def run_costs(cfg: dict, repeats: int = 3) -> dict:
     """QJ4 (decided with the user): wall-clock time of training + inference of every stage-2 method on the same node,
     for the chosen configuration of the first seed of every unit of ``qj4_units`` (F-X): the PCA (common to all), the
     classical methods of QJ1 on the CPUs (``classical_scores``: kernel / fit / scoring of the 2,000 candidates, as
@@ -1444,8 +1472,7 @@ def run_costs(cfg: dict, device: str = "cuda", repeats: int = 3, units=None, sav
     kernel products on the CPUs or on the GPU = the pipeline of QI4, and the PyTorch simulator all on the GPU); one
     untimed warm-up per configuration, then up to ``repeats`` timed runs (one if it takes > 60 s), median.  No
     hyper-parameter search: its cost (the CV, tens of fits per unit) is reported from the logged unit times.  Checks:
-    test AP of every timed run against the runs CSV.  Plus ``hardware_counts``.  Report section QJ4 (``units`` /
-    ``save``: a subset without saving, for a smoke test)."""
+    test AP of every timed run against the runs CSV.  Plus ``hardware_counts``.  Report section QJ4."""
     import os
     import platform
 
@@ -1455,13 +1482,15 @@ def run_costs(cfg: dict, device: str = "cuda", repeats: int = 3, units=None, sav
     main = cfg["stage2"]["main"]
     vid, seed = main["variant"], int(cfg["qk_samples"]["seeds"][0])
     engines = {k: v for k, v in QJ4_ENGINES.items() if torch.cuda.is_available() or v[0] == "cpu"}
-    q = pd.read_csv(qi4_paths(cfg)["runs"])
-    q = q[(q["role"] == "chosen") & (q["variant"] == vid) & (q["seed"] == seed)]
-    c = pd.read_csv(stage2_paths(cfg, "qj1")["runs"])
-    c = c[(c["variant"] == vid) & (c["seed"] == seed) & (c["map"] != "RBF-wide")]
+    qa = pd.read_csv(qi4_paths(cfg)["runs"])
+    qa = qa[(qa["role"] == "chosen") & (qa["variant"] == vid)]
+    ca = pd.read_csv(stage2_paths(cfg, "qj1")["runs"])
+    ca = ca[ca["variant"] == vid]
+    q = qa[qa["seed"] == seed]
+    c = ca[(ca["seed"] == seed) & (ca["map"] != "RBF-wide")]
     z = np.load(features_path(cfg))
     med = lambda ts, k: round(float(np.median([t[k] for t in ts])), 4)
-    todo = units or qj4_units(cfg)
+    todo = qj4_units(cfg)
     units, ap_diff = {}, 0.0
     for d, n in todo:
         x_tr, i_tr, x_te, i_te = load_qk(cfg, vid, n, seed, z)
@@ -1495,10 +1524,6 @@ def run_costs(cfg: dict, device: str = "cuda", repeats: int = 3, units=None, sav
         units[f"d{d}_n{n}"] = {"d": d, "n": n, "pca_s": round(pca_s, 4), "methods": res}
         print(f"QJ4 d{d} n{n}: " + ", ".join(f"{m} {v['cpu']['total_s']:.2f} s" for m, v in res.items()), flush=True)
     logged = {}                                                           # whole units with the CV search (QI4.3, QJ1)
-    qa = pd.read_csv(qi4_paths(cfg)["runs"])
-    qa = qa[(qa["role"] == "chosen") & (qa["variant"] == vid)]
-    ca = pd.read_csv(stage2_paths(cfg, "qj1")["runs"])
-    ca = ca[ca["variant"] == vid]
     for d, n in todo:
         logged[f"d{d}_n{n}"] = {"quantum_3_maps_gpu_job_s": round(float(qa[(qa["d"] == d) & (qa["n"] == n)].groupby("seed")["seconds"].first().median()), 1),
                                 "classical_6_methods_cpu_job_s": round(float(ca[(ca["d"] == d) & (ca["n"] == n)].groupby("seed")["seconds"].first().median()), 1)}
@@ -1517,8 +1542,7 @@ def run_costs(cfg: dict, device: str = "cuda", repeats: int = 3, units=None, sav
                     "unit_seconds_with_cv_logged = the logged time of a whole unit of QI4.3 (3 maps, CV + refit, GPU job) "
                     "and QJ1 (6 methods, CV + refit, CPU job, parallel CV), median over the seeds, different conditions; "
                     "hardware_counts = circuits / shots a QPU would need, without device data (QK3)")}
-    if save:
-        save_report(cfg, "QJ4", rep)
+    save_report(cfg, "QJ4", rep)
     return rep
 
 
@@ -1753,7 +1777,7 @@ def main(argv: list[str] | None = None) -> int:
                               "gap": e["gap_decomposition_ap"]} for v, e in r["representations"].items()}, indent=1))
         print(json.dumps({"fx_learning_curve": r["fx_learning_curve"], "checks": r["checks"]}, indent=1))
     elif args.command == "costs":
-        r = run_costs(cfg, args.device)
+        r = run_costs(cfg)
         print(json.dumps({u: {m: {e: t["total_s"] for e, t in v.items()} for m, v in e_["methods"].items()}
                           for u, e_ in r["units"].items()}, indent=1))
         print(json.dumps(r["checks"], indent=1))

@@ -271,7 +271,8 @@ def run_grid(cfg: dict) -> dict:
     """QC7.1: geometry of the tile grid on the WAC grid of R, checked against the rasters and tiles.csv."""
     import pandas as pd
 
-    from qc_preprocess import pixel_m, raster_path
+    from qc_data import pixel_m
+    from qc_preprocess import raster_path
 
     tile_px, stride_px, cell_px = (int(cfg["tiling"][k]) for k in ("tile_px", "stride_px", "cell_px"))
     grid = region_grid(cfg, "wac")
@@ -328,7 +329,7 @@ def run_grid(cfg: dict) -> dict:
 
 def run_ownership(cfg: dict) -> dict:
     """QC7.2: every cell owned at most once, by the tile in which it is central; checked on the real grid."""
-    from qc_preprocess import pixel_m
+    from qc_data import pixel_m
 
     tile_px, stride_px, cell_px = (int(cfg["tiling"][k]) for k in ("tile_px", "stride_px", "cell_px"))
     grid = region_grid(cfg, "wac")

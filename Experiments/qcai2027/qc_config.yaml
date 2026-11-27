@@ -3,12 +3,13 @@
 
 paths:
   dataset_root: Dataset/Moon                         # raw products, same structure as the full-project dataset (QA2)
-  inventory: ../Repository/Dataset/Moon/preprocessing/sources/data_inventory.csv
-  valid_coverage: ../Repository/Dataset/Moon/preprocessing/sources/data_valid_coverage.csv   # QA2.1
-  quality_metrics: ../Repository/Dataset/Moon/preprocessing/sources/data_quality_metrics.csv   # QD-A4: quality score, effective resolution
-  source_root: ../Repository/Dataset/Moon          # full-project raw dataset, origin of the copies (QA2.2)
+  inventory: Dataset/Moon/preprocessing/sources/data_inventory.csv              # dataset inventory (rows of the products of R)
+  valid_coverage: Dataset/Moon/preprocessing/sources/data_valid_coverage.csv     # QA2.1
+  quality_metrics: Dataset/Moon/preprocessing/sources/data_quality_metrics.csv   # QD-A4: quality score, effective resolution
+  coregistration: Dataset/Moon/preprocessing/diagnostics/B4/coregistration.csv   # QC2.2 (a): dataset diagnostics
+  # source_root: <folder>   # optional (QA2.2): a reference copy of Dataset/Moon to compare the raw files with
   catalog: Dataset/Moon/catalogs/robbins2019/lunar_crater_database_robbins_2018.csv   # QA3.1
-  dataset_scripts: ../Repository/Dataset/scripts     # data_quality, diag_dem_sources, ... (imported, not copied)
+  dataset_scripts: Dataset/scripts                   # dataset tooling: data_quality, diag_dem_sources, ...
   output: Dataset/Moon/qcai2027                      # rasters and caches of the experiment (QC7.3)
   results: Experiments/qcai2027/results              # CSV / JSON / figures
 
@@ -215,6 +216,10 @@ stage2:                # QI4, stage-2 classifier on the precomputed kernels (qc_
     gamma_scale: 1
     shots: 1024
 
+regression:            # QI7.1 SVR of dx, dy, log_r on the stage-2 kernels (qc_regression.py); C grid = stage2.svm_C
+  epsilon: [0.05, 0.1, 0.2, 0.5]   # SVR epsilon, in units of the training std of the target
+  curve_d: 16                 # d of the learning curve (sizes of qk_samples)
+
 noise:                 # QK1-QK2 device noise model and readout mitigation (qc_noise.py)
   backends: [FakeSherbrooke, FakeFez]   # qiskit_ibm_runtime.fake_provider: Eagle r3 127 qubits (ECR), Heron r2 156 qubits (CZ)
   dims: [4, 8, 12]
@@ -227,5 +232,10 @@ noise:                 # QK1-QK2 device noise model and readout mitigation (qc_n
   optimization_level: 3       # transpile once per device and d, angles as parameters
   method: density_matrix      # Aer method (fastest with noise at d <= 12)
   batch: 500                  # circuits per Aer call; the npz is rewritten after each batch (restart point)
+  resources:                  # QK3 resource table (qc_noise.py resources); shots = diagnostics.shots_reference
+    maps: [QK-A, QK-Z, QK-P]
+    reps: [1, 2]              # QK-Z / QK-P repetitions (both chosen by the CV of QI4.3)
+    dims: [4, 8, 12, 16, 20]
+    extrapolation: {d: 16, n: 500}   # the Table I configuration, extrapolated to R and the Moon
 
 seed: 2027

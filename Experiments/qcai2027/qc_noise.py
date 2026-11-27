@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Noise and resources of the quantum kernel (plan phase QK, RQ4): device noise model and readout mitigation.
+"""Noise and resources of the quantum kernel (plan phase QK, RQ4): device noise model, readout mitigation and
+resource table.
 
 QK1 - Device noise model.  The QK-Z fidelity kernel (r = ``noise.reps``) is estimated as on hardware: one
 compute-uncompute circuit U(x) U(x')^+ per pair (``qc_kernels.feature_map``), transpiled **once** per device and d
@@ -33,16 +34,25 @@ K_est = a K + b (a global depolarising channel gives b = (1 - a) / 2^d), the mea
 kernel and scored on the estimated test kernel: F1, precision, recall, AP, agreement of the predictions with the exact
 SVM.
 
+QK3 - Resource table (``run_resources``, section QK3): per device, feature map (QK-A, QK-Z, QK-P), r and d of
+``noise.resources`` the circuit of one kernel evaluation transpiled on the device (qubits, depth, two-qubit gates and
+layers, duration of one shot from the calibrated gate and readout durations); per chosen QSVC run of QI4.3 the
+training / inference circuits (``qc_experiments.qpu_circuits``), shots (``diagnostics.shots_reference`` per circuit)
+and the QPU time from the timing published with the device (``qpu_time``: shots x (duration + default rep_delay),
+and the CLOPS_h throughput, the two ends of a range); extrapolation to the whole region R and the Moon (``region_candidates``).
+
 Commands
 --------
 run        QK1 + QK2 simulation -> ``Dataset/Moon/qcai2027/noise/qk_noise.npz``, then the report.  Hours (d = 12
            density matrices): CPU job (run_qcai_cpu.sh); resubmit to continue.
 summary    QK1 + QK2 report from the saved npz -> sections QK1, QK2 of ``results/qk_noise.json``.  Seconds.
+resources  QK3 resource table -> section QK3 of ``results/qk_noise.json``.  ~1 min (transpilation only).
 
 Usage
 -----
     python Experiments/qcai2027/qc_noise.py run        (CPU job: run_qcai_cpu.sh)
     python Experiments/qcai2027/qc_noise.py summary
+    python Experiments/qcai2027/qc_noise.py resources
     python Experiments/qcai2027/qc_noise.py --selftest
 """
 
@@ -50,7 +60,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import time
 from pathlib import Path
@@ -58,9 +67,10 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from qc_data import CONFIG_PATH, load_config, save_report, written  # noqa: E402
+from qc_data import CONFIG_PATH, load_config, save_npz_atomic, save_report, written  # noqa: E402
 from qc_experiments import cv_search, cv_table, f1, fit_svc, select_best, svc_scores  # noqa: E402
-from qc_kernels import feature_angles, feature_map, fidelity_kernels, load_qk, psd_project, reduce_features, shot_kernel  # noqa: E402
+from qc_kernels import (feature_angles, feature_map, fidelity_kernels, load_qk, map_reps, psd_project,  # noqa: E402
+                        reduce_features, rep_suffix, shot_kernel)
 from qc_probes import average_precision  # noqa: E402
 
 ESTIMATES = ("raw", "m3")                     # device noise, device noise + M3 readout mitigation
@@ -96,13 +106,16 @@ def device_circuit(name: str, d: int, reps: int, backend, opt_level: int, seed: 
     qc.measure_all()
     tq = transpile(qc, backend, optimization_level=opt_level, seed_transpiler=seed)
     mapping = final_measurement_mapping(tq)
-    ops = tq.count_ops()
-    two_q = sum(v for k, v in ops.items() if k in ("ecr", "cz", "cx", "rzz"))
     return {"circuit": tq, "theta": theta, "phi": phi, "mapping": mapping,
-            "summary": {"depth": tq.depth(), "two_qubit_gates": int(two_q),
-                        "gates": int(sum(v for k, v in ops.items() if k not in ("measure", "barrier"))),
-                        "ops": {k: int(v) for k, v in ops.items() if k != "barrier"},
-                        "physical_qubits": [int(mapping[k]) for k in sorted(mapping)]}}
+            "summary": {**circuit_summary(tq), "physical_qubits": [int(mapping[k]) for k in sorted(mapping)]}}
+
+
+def circuit_summary(tq) -> dict:
+    """Depth, two-qubit gates and all gates (without measurements) of a transpiled circuit, and its operations."""
+    ops = tq.count_ops()
+    return {"depth": tq.depth(), "two_qubit_gates": int(sum(v for k, v in ops.items() if k in ("ecr", "cz", "cx", "rzz"))),
+            "gates": int(sum(v for k, v in ops.items() if k not in ("measure", "barrier"))),
+            "ops": {k: int(v) for k, v in ops.items() if k != "barrier"}}
 
 
 def bind(dev: dict, a: np.ndarray, b: np.ndarray) -> list:
@@ -140,14 +153,18 @@ def all_pairs(th_tr: np.ndarray, th_te: np.ndarray) -> tuple[np.ndarray, np.ndar
     pl = pair_lists(len(th_tr), len(th_te))
     a = np.concatenate([th_tr[pl["train"][0]], th_te[pl["test"][0]], th_tr[pl["diag"][0]]])
     b = np.concatenate([th_tr[pl["train"][1]], th_tr[pl["test"][1]], th_tr[pl["diag"][1]]])
-    sizes = [len(pl[k][0]) for k in ("train", "test", "diag")]
-    edges = np.cumsum([0] + sizes)
-    return a, b, {k: slice(edges[i], edges[i + 1]) for i, k in enumerate(("train", "test", "diag"))}
+    return a, b, pair_slices(pl)
+
+
+def pair_slices(pl: dict) -> dict:
+    """Slices of the parts train, test, diag (in this order) of the circuits of ``pair_lists``."""
+    edges = np.cumsum([0] + [len(pl[k][0]) for k in ("train", "test", "diag")])
+    return {k: slice(edges[i], edges[i + 1]) for i, k in enumerate(("train", "test", "diag"))}
 
 
 def assemble(p: np.ndarray, n_tr: int, n_te: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """(K_train with diagonal 1, K_test (n_te, n_tr), measured diagonal) from the values ``p`` of ``all_pairs``."""
-    _, _, sl = all_pairs(np.zeros((n_tr, 1)), np.zeros((n_te, 1)))
+    sl = pair_slices(pair_lists(n_tr, n_te))
     k_tr = np.eye(n_tr)
     iu = np.triu_indices(n_tr, 1)
     k_tr[iu] = p[sl["train"]]
@@ -185,7 +202,7 @@ def choose_hparams(cfg: dict, data: dict, d: int) -> dict:
     return {"c": float(best["c"]), "C": float(best["C"]), "cv_ap": round(float(best["cv_ap"]), 4)}
 
 
-def angles(cfg: dict, data: dict, d: int, c: float) -> tuple[np.ndarray, np.ndarray]:
+def angles(data: dict, d: int, c: float) -> tuple[np.ndarray, np.ndarray]:
     a_tr, a_te = reduce_features(data["x_tr"], d, data["x_te"])
     return feature_angles(a_tr, c), feature_angles(a_te, c)
 
@@ -203,10 +220,7 @@ def load_store(cfg: dict) -> dict:
 def save_store(cfg: dict, store: dict) -> None:
     """Atomic rewrite of the npz (a job killed while writing leaves the previous file)."""
     p = noise_path(cfg)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    tmp = p.with_suffix(".tmp.npz")
-    np.savez(tmp, **store)
-    os.replace(tmp, p)
+    save_npz_atomic(p, store)
     written(p)
 
 
@@ -269,7 +283,7 @@ def run_noise(cfg: dict) -> None:
             save_store(cfg, store)
         c = float(store[f"hp_d{d}"][0])
         print(f"QK1 d {d}: c {c}, C {store[f'hp_d{d}'][1]}, CV AP {store[f'hp_d{d}'][2]}", flush=True)
-        th_tr, th_te = angles(cfg, data, d, c)
+        th_tr, th_te = angles(data, d, c)
         for bname in nz["backends"]:
             run_device(cfg, store, bname, d, th_tr, th_te)
     noise_summary(cfg)
@@ -328,7 +342,7 @@ def noise_summary(cfg: dict) -> dict:
             continue
         c, C, cv_ap = (float(v) for v in store[f"hp_d{d}"])
         hp = {"c": c, "C": C}
-        th_tr, th_te = angles(cfg, data, d, c)
+        th_tr, th_te = angles(data, d, c)
         exact = fidelity_kernels(nz["map"], th_tr, th_te, int(nz["reps"]), "cpu")
         ex, pred_ex = estimate_metrics(exact[0], exact[1], None, exact, data, hp, thr, d, None)
         rng = np.random.default_rng([int(cfg["seed"]), shots, d])
@@ -379,6 +393,156 @@ def noise_summary(cfg: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# QK3 - Resources
+# ---------------------------------------------------------------------------
+
+
+def projected_circuits(d: int, reps: int) -> list:
+    """QK-P on a QPU: the QK-Z state U(theta) measured on all qubits in the X, Y and Z bases (3 circuits per sample)."""
+    u = feature_map("QK-Z", d, reps)
+    out = []
+    for basis in "XYZ":
+        qc = u.copy()
+        if basis == "Y":
+            qc.sdg(range(d))
+        if basis in "XY":
+            qc.h(range(d))
+        qc.measure_all()
+        out.append(qc)
+    return out
+
+
+def map_resources(name: str, d: int, reps: int, backend, opt_level: int, seed: int) -> dict:
+    """Qubits, depth, two-qubit gates and layers, and the duration of one shot (longest path with the gate and
+    measurement durations of the device, ``QuantumCircuit.estimate_duration``) of the circuit of one kernel
+    evaluation, transpiled on ``backend``; QK-P: the largest of its 3 measurement circuits."""
+    from qiskit import transpile
+
+    if name == "QK-P":
+        tqs = transpile(projected_circuits(d, reps), backend, optimization_level=opt_level, seed_transpiler=seed)
+    else:
+        tqs = [device_circuit(name, d, reps, backend, opt_level, seed)["circuit"]]
+    rows = []
+    for tq in tqs:
+        sm = circuit_summary(tq)
+        rows.append({"qubits": d, "depth": sm["depth"], "two_qubit_gates": sm["two_qubit_gates"],
+                     "two_qubit_layers": tq.depth(filter_function=lambda x: x.operation.num_qubits == 2),
+                     "duration_us": round(tq.estimate_duration(backend.target, unit="s") * 1e6, 2)})
+    return {k: max(r[k] for r in rows) for k in rows[0]}
+
+
+def device_timing(backend) -> dict:
+    """Timing figures published with the device (configuration of the fake backend = IBM calibration data): delay
+    between shots (default ``rep_delay``, microseconds) and the CLOPS_h throughput (circuit layer operations / s)."""
+    c = backend.configuration()
+    rep_us = float(c.default_rep_delay) * 1e6            # Qiskit converts the published microseconds to seconds
+    if not 1 <= rep_us <= 1000:
+        raise ValueError(f"unexpected rep_delay {c.default_rep_delay} on {backend.name}")
+    return {"processor": f"{c.processor_type['family']} r{c.processor_type['revision']}",
+            "rep_delay_us": rep_us, "clops_h": int(c.clops_h)}
+
+
+def qpu_time(circuits: float, shots: int, res: dict, timing: dict) -> dict:
+    """QPU seconds of ``circuits`` x ``shots`` shots: ``physical`` = shots x (duration of one shot + default rep_delay),
+    execution only (no loading, compilation, classical overhead); ``clops`` = circuits x shots x max(1, two-qubit
+    layers) / CLOPS_h (the definition of CLOPS: layers x shots x circuits / time, Wack et al. 2021), with the overheads
+    of the benchmark but its own (shorter) delay between shots: neither is a bound, together they give a range."""
+    total = circuits * shots
+    return {"physical_s": float(f"{total * (res['duration_us'] + timing['rep_delay_us']) * 1e-6:.3g}"),
+            "clops_s": float(f"{total * max(1, res['two_qubit_layers']) / timing['clops_h']:.3g}")}
+
+
+def region_candidates(cfg: dict, variant: str) -> dict:
+    """Stage-2 inputs if the whole region R were processed: the owned sub-tiles of R (``split_cells.npz``) x the share
+    of stage-1 candidates of ``variant`` on the owned QK-pool + Test sub-tiles (QH3); the whole Moon = R x the ratio
+    of the areas (sphere: (sin lat_max - sin lat_min) / 2 x (lon_max - lon_min) / 360 of the surface)."""
+    out_dir = cfg["paths"]["output"]
+    owned = int((np.load(out_dir / "split_cells.npz")["owner_tile"] >= 0).sum())
+    z = np.load(out_dir / "stage1" / "stage1_scores.npz")
+    cand = sum(int(z[f"{s}_cand_{variant}"].sum()) for s in ("qk_pool", "test"))
+    seen = sum(len(z[f"{s}_cand_{variant}"]) for s in ("qk_pool", "test"))
+    r = cfg["region"]
+    frac = (np.sin(np.radians(r["lat_max"])) - np.sin(np.radians(r["lat_min"]))) / 2 * (r["lon_max"] - r["lon_min"]) / 360
+    return {"owned_subtiles_R": owned, "candidate_share": round(cand / seen, 4), "candidates_R": int(round(owned * cand / seen)),
+            "moon_over_R_area": round(float(1 / frac), 3)}
+
+
+def run_resources(cfg: dict) -> dict:
+    """QK3 report: (1) per device, feature map, r and d the transpiled circuit of one kernel evaluation
+    (``map_resources``); (2) per chosen QSVC run of QI4.3 (main variant; circuits ``qc_experiments.qpu_circuits``,
+    shots = ``diagnostics.shots_reference``) the training / inference circuits, shots and QPU time per device
+    (``qpu_time`` with the circuit of the run's r), mean over the seeds per map, d, n; (3) extrapolation to R and the
+    whole Moon at ``noise.resources.extrapolation`` d and n: candidates of ``region_candidates`` x the mean support
+    vectors of the chosen runs."""
+    from qc_experiments import chosen_quantum_runs, qpu_circuits
+
+    nz, rs = cfg["noise"], cfg["noise"]["resources"]
+    shots, m_te = int(cfg["diagnostics"]["shots_reference"]), int(cfg["test_subset"]["size"])
+    opt, seed = int(nz["optimization_level"]), int(cfg["seed"])
+    circ, timing, t0 = {}, {}, time.time()
+    for bname in nz["backends"]:
+        be = fake_backend(bname)
+        timing[bname] = device_timing(be)
+        for m in rs["maps"]:
+            for r in map_reps(m, rs["reps"]):
+                for d in [int(v) for v in rs["dims"]]:
+                    circ[(bname, m, r, d)] = map_resources(m, d, r, be, opt, seed)
+        print(f"QK3 {bname}: circuits transpiled, {time.time() - t0:.0f} s", flush=True)
+    table = {f"{b}_{m}{rep_suffix(m, r)}_d{d}": v for (b, m, r, d), v in circ.items()}
+
+    def rkey(row):
+        return 1 if row["map"] == "QK-A" else int(row["r"])
+
+    q = chosen_quantum_runs(cfg)
+    runs = {}
+    for (m, d, n), g in q.groupby(["map", "d", "n"]):
+        tr, te = qpu_circuits(m, int(n), float(g["support_vectors"].mean()), m_te)
+        unit = {"r_chosen": sorted({rkey(row) for _, row in g.iterrows()}) if m != "QK-A" else None,
+                "training_circuits": int(tr), "inference_circuits": int(round(te)), "total_shots": float(f"{(tr + te) * shots:.3g}")}
+        for b in nz["backends"]:
+            t = [qpu_time(sum(qpu_circuits(m, int(n), float(row["support_vectors"]), m_te)), shots,
+                          circ[(b, m, rkey(row), int(d))], timing[b]) for _, row in g.iterrows()]
+            unit[b] = {k: float(f"{np.mean([x[k] for x in t]):.3g}") for k in t[0]}
+        runs[f"{m}_d{d}_n{n}"] = unit
+
+    ex = rs["extrapolation"]
+    reg = region_candidates(cfg, cfg["stage2"]["main"]["variant"])
+    extra = {"d": int(ex["d"]), "n": int(ex["n"]), **reg}
+    for m in rs["maps"]:
+        g = q[(q["map"] == m) & (q["d"] == int(ex["d"])) & (q["n"] == int(ex["n"]))]
+        sv = float(g["support_vectors"].mean())
+        r = 1 if m == "QK-A" else int(g["r"].mode().iloc[0])
+        unit = {"support_vectors_mean": round(sv, 1), "r": r if m != "QK-A" else None}
+        for area, mult in (("R", 1.0), ("moon", reg["moon_over_R_area"])):
+            tr, te = qpu_circuits(m, int(ex["n"]), sv, reg["candidates_R"] * mult)
+            unit[area] = {"kernel_circuits": float(f"{tr + te:.3g}"), "shots": float(f"{(tr + te) * shots:.3g}"),
+                          **{b: qpu_time(tr + te, shots, circ[(b, m, r, int(ex["d"]))], timing[b]) for b in nz["backends"]}}
+        extra[m] = unit
+    rep = {"devices": timing, "shots_per_circuit": shots, "test_candidates": m_te, "optimization_level": opt,
+           "circuits": table, "runs": runs, "extrapolation": extra,
+           "pipeline_reference": "~2e9 kernel evaluations for the whole Moon (~118,000 tiles x ~38 candidates x ~500 "
+                                 "support vectors; pipeline section 'Quantum kernel development and validation')",
+           "note": ("one kernel evaluation = one compute-uncompute circuit (QK-A, QK-Z) or, for QK-P, one of the 3 "
+                    "measurement circuits of a sample (largest reported); transpiled once with the angles as "
+                    "parameters (the counts do not depend on the angles: R_Z is virtual); duration = longest path with "
+                    "the gate and readout durations of the calibration; physical_s = shots x (duration + rep_delay), "
+                    "execution only at the default rep_delay; clops_s = circuits x shots x max(1, two-qubit layers) / CLOPS_h, an approximation "
+                    "(CLOPS_h is measured on full-width layers); times scale linearly with the shots per circuit; "
+                    "extrapolation: candidates = owned sub-tiles of R x stage-1 candidate share (QH3), whole Moon by "
+                    "the ratio of the areas (latitude-dependent crater density and polar coverage ignored)")}
+    save_report(cfg, "QK3", rep)
+    for m in rs["maps"]:
+        u = extra[m]
+        print(f"QK3 {m} d {ex['d']} n {ex['n']}: R {u['R']['kernel_circuits']:.3g} circuits, Moon "
+              f"{u['moon']['kernel_circuits']:.3g}; Moon QPU time (physical / CLOPS, days) "
+              + "; ".join(f"{b} {u['moon'][b]['physical_s'] / 86400:.3g} / {u['moon'][b]['clops_s'] / 86400:.3g}"
+                          for b in nz["backends"]), flush=True)
+    return rep
+
+
+# ---------------------------------------------------------------------------
+# Self-test
+# ---------------------------------------------------------------------------
 # Self-test
 # ---------------------------------------------------------------------------
 
@@ -410,13 +574,28 @@ def selftest() -> None:
     m3b = m3_mitigator(sim, dev, store, "k")                       # restart from the saved matrices
     mit_b = np.clip([q.get("000", 0.0) for q in m3b.apply_correction(counts, [dev["mapping"]] * len(a))], 0, 1)
     assert np.allclose(mit, mit_b)
+    from qiskit.quantum_info import SparsePauliOp, Statevector
+    th = rng.normal(0, 0.5, 3)                                     # QK-P measurement circuits = local expectations
+    u = feature_map("QK-Z", 3, 2)
+    u = u.assign_parameters(dict(zip(sorted(u.parameters, key=lambda p: p.index), th)))
+    sv = Statevector(u)
+    for basis, qc in zip("XYZ", projected_circuits(3, 2)):
+        qc = qc.assign_parameters(dict(zip(sorted(qc.parameters, key=lambda p: p.index), th))).remove_final_measurements(inplace=False)
+        pr = Statevector(qc).probabilities_dict()
+        for q in range(3):
+            meas = sum(v * (1 - 2 * int(k[::-1][q])) for k, v in pr.items())
+            label = ["I"] * 3
+            label[2 - q] = basis
+            assert abs(meas - sv.expectation_value(SparsePauliOp("".join(label))).real) < 1e-10
+    res = map_resources("QK-P", 3, 1, backend, 3, 0)
+    assert res["qubits"] == 3 and res["two_qubit_layers"] >= 2 and res["duration_us"] > 0
     print(f"qc_noise selftest: OK (3 qubits FakeFez: mean |K_est - K| raw {np.mean(np.abs(raw - exact_pairs)):.3f}, "
           f"M3 {np.mean(np.abs(mit - exact_pairs)):.3f})")
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", nargs="?", choices=["run", "summary"])
+    ap.add_argument("command", nargs="?", choices=["run", "summary", "resources"])
     ap.add_argument("--config", type=Path, default=CONFIG_PATH)
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args(argv)
@@ -428,6 +607,8 @@ def main(argv: list[str] | None = None) -> int:
     cfg = load_config(args.config)
     if args.command == "run":
         run_noise(cfg)
+    elif args.command == "resources":
+        run_resources(cfg)
     else:
         print(json.dumps(noise_summary(cfg)["QK1"].get("d4", {}), indent=1))
     return 0
